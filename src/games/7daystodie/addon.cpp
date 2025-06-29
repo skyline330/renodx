@@ -29,11 +29,13 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x9DD6F785), // Bloom On + Sunshafts On
     CustomShaderEntry(0xD25C43B1), // Bloom On + Sunshafts Off
     CustomShaderEntry(0x46D3ECE8), // Bloom Off + Sunshafts On/Off
+    CustomShaderEntry(0x41B1FF38), // Bloom Off + Sunshafts Off
     // Post Processing
     CustomShaderEntry(0x00276AF2), // Blood
-    CustomShaderEntry(0x8FC25228), // Spawn effects
+    CustomShaderEntry(0x8FC25228), // Spawn Effects
     CustomShaderEntry(0xF0B89FC0), // Vignette
     CustomShaderEntry(0x366EE13E), // Final Pass
+    CustomShaderEntry(0x70ADAB0F), // UI
     // CustomSwapchainShader(0x00000000),
     // BypassShaderEntry(0x00000000)
 };
@@ -82,7 +84,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 203.f,
         .label = "Game Brightness",
         .section = "Tone Mapping",
-        .tooltip = "Sets the value of 100%% SDR white in nits",
+        .tooltip = "Sets the value of 100% SDR white in nits",
         .min = 48.f,
         .max = 500.f,
     },
@@ -430,7 +432,7 @@ renodx::utils::settings::Settings settings = {
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "Huge thanks to everyone at HDR Den, Musa and Ritsu for their video resources, \nand Marat for helping me get this mod working.",
+        .label = "Huge thanks to everyone at HDR Den, Musa and Ritsu for their video resources, and Marat for helping me get this mod working.",
         .section = "About",
     },
     new renodx::utils::settings::Setting{

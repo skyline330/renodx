@@ -78,9 +78,7 @@ void main(
   r0.xy = cb0[26].xx * r0.xy;
   r0.xyzw = t2.Sample(s2_s, r0.xy).xyzw;
   r0.xyzw = r2.xyzw + r0.xyzw;
-
   r0.xyzw = cb0[34].yyyy * r0.xyzw;
-
   r2.xy = v1.xy * cb0[33].xy + cb0[33].zw;
   r2.xyzw = t3.Sample(s3_s, r2.xy).xyzw;
   r3.xyz = float3(0.0625,0.0625,0.0625) * r0.xyz;
@@ -94,39 +92,27 @@ void main(
   r0.xyzw = r1.xyzw + r0.xyzw;
   r0.xyzw = cb0[36].zzzz * r0.xyzw;
   float3 untonemapped = r0.rgb;
-  untonemapped = renodx::color::srgb::DecodeSafe(untonemapped);
-
 
   // ARRI encoding
   r0.xyz = r0.xyz * float3(5.55555582,5.55555582,5.55555582) + float3(0.0479959995,0.0479959995,0.0479959995);
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
+  
+  // r0.xyz = cb0[36].yyy * r0.xyz;
+  // r1.x = 0.5 * cb0[36].x;
+  // r0.xyz = r0.xyz * cb0[36].xxx + r1.xxx;
+  // r1.xyzw = t4.Sample(s4_s, r0.xyz).wxyz;
+  r1.gba = renodx::lut::SampleTetrahedral(t4, r0.rgb, 1 / cb0[36].x);
 
-
-  r0.xyz = cb0[36].yyy * r0.xyz;
-  r1.x = 0.5 * cb0[36].x;
-  r0.xyz = r0.xyz * cb0[36].xxx + r1.xxx;
-  r1.xyzw = t4.Sample(s4_s, r0.xyz).wxyz;  // lut output, srgba
   r0.x = cmp(0.5 < cb0[42].x);
   if (r0.x != 0) {
-    r0.xyz = saturate(r1.yzw);
-    r1.x = dot(r0.xyz, float3(0.212672904,0.715152204,0.0721750036)); // BT709 to XYZ
+    // r0.xyz = saturate(r1.yzw);
+    // r1.x = dot(r0.xyz, float3(0.212672904,0.715152204,0.0721750036));
+    r1.x = renodx::color::y::from::BT709(r1.gba);
   } else {
     r1.x = r0.w;
   }
   o0.xyzw = r1.yzwx;
-  o0.rgb = renodx::color::srgb::DecodeSafe(o0.rgb);
-
-  if (RENODX_TONE_MAP_TYPE != 0) {
-    o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
-  }
-  if (CUSTOM_FILM_GRAIN_STRENGTH != 0) {
-    o0.rgb = renodx::effects::ApplyFilmGrain(
-      o0.rgb,
-      v1.xy,
-      CUSTOM_RANDOM,
-      CUSTOM_FILM_GRAIN_STRENGTH * 0.03f);
-  }
-  o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+  o0.rgb = untonemapped;
   return;
 }

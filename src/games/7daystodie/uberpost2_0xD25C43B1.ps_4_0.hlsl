@@ -94,7 +94,6 @@ void main(
   r0.xyzw = r2.xyzw * r0.xyzw + r1.xyzw;
   r0.xyzw = cb0[36].zzzz * r0.xyzw;
   float3 untonemapped = r0.rgb;
-  untonemapped = renodx::color::srgb::DecodeSafe(untonemapped);
 
   // ARRI encoding
   r0.xyz = r0.xyz * float3(5.55555582,5.55555582,5.55555582) + float3(0.0479959995,0.0479959995,0.0479959995);
@@ -102,10 +101,11 @@ void main(
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839,0.0734997839,0.0734997839) + float3(0.386036009,0.386036009,0.386036009));
 
-  r0.xyz = cb0[36].yyy * r0.xyz;
-  r0.w = 0.5 * cb0[36].x;
-  r0.xyz = r0.xyz * cb0[36].xxx + r0.www;
-  r0.xyzw = t5.Sample(s5_s, r0.xyz).xyzw;
+  // r0.xyz = cb0[36].yyy * r0.xyz;
+  // r0.w = 0.5 * cb0[36].x;
+  // r0.xyz = r0.xyz * cb0[36].xxx + r0.www;
+  // r0.xyzw = t5.Sample(s5_s, r0.xyz).xyzw;
+  r0.rgb = renodx::lut::SampleTetrahedral(t5, r0.rgb, 1 / cb0[36].x);
 
   // sRGB encoding
   // r1.xyz = max(float3(1.1920929e-07,1.1920929e-07,1.1920929e-07), abs(r0.xyz));
@@ -127,7 +127,7 @@ void main(
   r1.x = sqrt(r1.x);
   r1.x = 1 + -r1.x;
   r0.w = r1.x * r0.w;
-  r0.xyz = r0.www * float3(0.00392156886,0.00392156886,0.00392156886) + r0.xyz;
+  // r0.xyz = r0.www * float3(0.00392156886,0.00392156886,0.00392156886) + r0.xyz;
   // sRGB decoding
   // r1.xyz = float3(0.0549999997,0.0549999997,0.0549999997) + r0.xyz;
   // r1.xyz = float3(0.947867334,0.947867334,0.947867334) * r1.xyz;
@@ -139,17 +139,21 @@ void main(
   // r0.xyz = cmp(float3(0.0404499993,0.0404499993,0.0404499993) >= r0.xyz);
   // o0.xyz = r0.xyz ? r2.xyz : r1.xyz;
   o0.rgb = renodx::color::srgb::DecodeSafe(r0.rgb);
+  o0.rgb = r0.rgb;
+  float3 outputColor = o0.rgb;
 
-  if (RENODX_TONE_MAP_TYPE != 0) {
-    o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    outputColor = renodx::draw::ToneMapPass(untonemapped, outputColor);
+  } else {
+    outputColor = saturate(outputColor);
   }
   if (CUSTOM_FILM_GRAIN_STRENGTH !=0) {
-    o0.rgb = renodx::effects::ApplyFilmGrain(
-        o0.rgb,
+    outputColor = renodx::effects::ApplyFilmGrain(
+        outputColor,
         v1.xy,
         CUSTOM_RANDOM,
         CUSTOM_FILM_GRAIN_STRENGTH * 0.03f);
   }
-  o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+  o0.rgb = renodx::draw::RenderIntermediatePass(outputColor);
   return;
 }

@@ -41,37 +41,28 @@ void main(
   r1.xyz = r1.xyz * r0.xxx;
   r0.xyzw = cb0[36].zzzz * r1.xyzw;
   float3 untonemapped = r0.rgb;
-  untonemapped = renodx::color::srgb::DecodeSafe(untonemapped);
 
   // ARRI encoding
   r0.xyz = r0.xyz * float3(5.55555582,5.55555582,5.55555582) + float3(0.0479959995,0.0479959995,0.0479959995);
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839,0.0734997839,0.0734997839) + float3(0.386036009,0.386036009,0.386036009));
-  
-  r0.xyz = cb0[36].yyy * r0.xyz;
-  r1.x = 0.5 * cb0[36].x;
-  r0.xyz = r0.xyz * cb0[36].xxx + r1.xxx;
-  r1.xyzw = t2.Sample(s2_s, r0.xyz).wxyz;
+  // r0.xyz = renodx::color::arri::logc::c800::Encode(r0.xyz);
+
+  // r0.xyz = cb0[36].yyy * r0.xyz;
+  // r1.x = 0.5 * cb0[36].x;
+  // r0.xyz = r0.xyz * cb0[36].xxx + r1.xxx;
+  // r1.xyzw = t2.Sample(s2_s, r0.xyz).wxyz;
+  r1.gba = renodx::lut::SampleTetrahedral(t2, r0.xyz, 1 / cb0[36].x);
+
   r0.x = cmp(0.5 < cb0[42].x);
   if (r0.x != 0) {
-    r0.xyz = saturate(r1.yzw);
-    r1.x = dot(r0.xyz, float3(0.212672904,0.715152204,0.0721750036));
+    // r0.xyz = saturate(r1.yzw);
+    // r1.x = dot(r0.xyz, float3(0.212672904,0.715152204,0.0721750036));
+    r1.x = renodx::color::y::from::BT709(r1.gba);
   } else {
     r1.x = r0.w;
   }
   o0.xyzw = r1.yzwx;
-  o0.rgb = renodx::color::srgb::DecodeSafe(o0.rgb);
-
-  if (RENODX_TONE_MAP_TYPE != 0) {
-  o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
-  }
-  if (CUSTOM_FILM_GRAIN_STRENGTH != 0) {
-  o0.rgb = renodx::effects::ApplyFilmGrain(
-      o0.rgb,
-      v1.xy,
-      CUSTOM_RANDOM,
-      CUSTOM_FILM_GRAIN_STRENGTH * 0.03f);
-  }
-  o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+  o0.rgb = untonemapped;
   return;
-}
+} 

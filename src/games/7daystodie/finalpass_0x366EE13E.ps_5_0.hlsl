@@ -1,4 +1,5 @@
 #include "./shared.h"
+// applies after uberpost 1 and 3
 
 // ---- Created with 3Dmigoto v1.4.1 on Thu Jun 26 18:45:12 2025
 Texture2D<float4> t1 : register(t1);
@@ -31,6 +32,8 @@ void main(
   uint4 bitmask, uiDest;
   float4 fDest;
 
+  r1.xyzw = t1.Sample(s1_s, w1.xy).xyzw;
+  float3 untonemapped = r1.rgb;
   r0.xy = v1.xy * cb0[28].xy + cb0[28].zw;
   r0.x = t0.Sample(s0_s, r0.xy).w;
   r0.x = r0.x * 2 + -1;
@@ -40,7 +43,7 @@ void main(
   r0.y = sqrt(r0.y);
   r0.y = 1 + -r0.y;
   r0.x = r0.x * r0.y;
-  r1.xyzw = t1.Sample(s1_s, w1.xy).xyzw;
+
   // sRGB encoding
   // r0.yzw = max(float3(1.1920929e-07,1.1920929e-07,1.1920929e-07), abs(r1.xyz));
   // r0.yzw = log2(r0.yzw);
@@ -50,9 +53,12 @@ void main(
   // r2.xyz = float3(12.9200001,12.9200001,12.9200001) * r1.xyz;
   // r1.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r1.xyz);
   // r0.yzw = r1.xyz ? r2.xyz : r0.yzw;
-  r0.gba = renodx::color::srgb::EncodeSafe(r1.rgb);
   o0.w = r1.w;
-  r0.xyz = r0.xxx * float3(0.00392156886,0.00392156886,0.00392156886) + r0.yzw;
+  r0.gba = r1.rgb;
+  // r0.gba = renodx::color::srgb::EncodeSafe(r1.rgb);
+
+  // r0.xyz = r0.xxx * float3(0.00392156886,0.00392156886,0.00392156886) + r0.yzw;
+  // sRGB decoding
   // r1.xyz = float3(0.0549999997,0.0549999997,0.0549999997) + r0.xyz;
   // r1.xyz = float3(0.947867334,0.947867334,0.947867334) * r1.xyz;
   // r1.xyz = max(float3(1.1920929e-07,1.1920929e-07,1.1920929e-07), abs(r1.xyz));
@@ -62,7 +68,23 @@ void main(
   // r2.xyz = float3(0.0773993805,0.0773993805,0.0773993805) * r0.xyz;
   // r0.xyz = cmp(float3(0.0404499993,0.0404499993,0.0404499993) >= r0.xyz);
   // o0.xyz = r0.xyz ? r2.xyz : r1.xyz;
-  r1.rgb = renodx::color::srgb::DecodeSafe(r0.rgb);
-  o0.rgb = r1.rgb;
+  o0.rgb = r0.gba;
+  // o0.rgb = renodx::color::srgb::DecodeSafe(r0.rgb);
+
+  float3 outputColor = o0.rgb;
+
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    outputColor = renodx::draw::ToneMapPass(untonemapped, outputColor);
+  } else {
+    outputColor = saturate(outputColor);
+  }
+  if (CUSTOM_FILM_GRAIN_STRENGTH != 0) {
+    outputColor = renodx::effects::ApplyFilmGrain(
+        outputColor,
+        v1.xy,
+        CUSTOM_RANDOM,
+        CUSTOM_FILM_GRAIN_STRENGTH * 0.03f);
+  }
+  o0.rgb = renodx::draw::RenderIntermediatePass(outputColor);
   return;
 }

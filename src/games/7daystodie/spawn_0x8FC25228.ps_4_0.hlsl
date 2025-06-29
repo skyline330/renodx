@@ -47,7 +47,7 @@ void main(
   r0.w = r2.x * r0.w + r2.y;
   r1.x = -0.5 + r2.x;
   r1.x = -abs(r1.x) * 2 + 1;
-  r1.y = max(0, cb0[3].x);
+  r1.y = max(0, cb0[3].x); // potential wcg clamp?
   r1.y = min(cb0[2].w, r1.y);
   r1.y = r1.y + -r0.w;
   r0.w = r1.x * r1.y + r0.w;
