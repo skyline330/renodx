@@ -36,12 +36,15 @@ void main(uint3 vThreadID: SV_DispatchThreadID) // manual fix
   r0.w = r1.y ? r1.x : 0;
   r0.w = r1.z ? r0.w : 0;
   if (r0.w != 0) {
+    // ARRI_C1000_NO_CUT
     r0.xyz = r0.xyz * cb0[0].yyy + float3(-0.413588405,-0.413588405,-0.413588405);
     r0.xyz = r0.xyz * cb0[3].zzz + float3(0.0275523961,0.0275523961,0.0275523961);
     r0.xyz = float3(13.6054821,13.6054821,13.6054821) * r0.xyz;
     r0.xyz = exp2(r0.xyz);
     r0.xyz = float3(-0.0479959995,-0.0479959995,-0.0479959995) + r0.xyz;
     r0.xyz = float3(0.179999992,0.179999992,0.179999992) * r0.xyz;
+
+    // White Balance
     r1.x = dot(float3(0.390404999,0.549941003,0.00892631989), r0.xyz);
     r1.y = dot(float3(0.070841603,0.963172019,0.00135775004), r0.xyz);
     r1.z = dot(float3(0.0231081992,0.128021002,0.936245024), r0.xyz);
@@ -49,10 +52,16 @@ void main(uint3 vThreadID: SV_DispatchThreadID) // manual fix
     r1.x = dot(float3(2.85846996,-1.62879002,-0.0248910002), r0.xyz);
     r1.y = dot(float3(-0.210181996,1.15820003,0.000324280991), r0.xyz);
     r1.z = dot(float3(-0.0418119989,-0.118169002,1.06867003), r0.xyz);
+
+    // Color Filter
     r0.xyz = cb0[2].xyz * r1.xyz;
+
+    // Channel Mixing
     r1.x = dot(r0.xyz, cb0[4].xyz);
     r1.y = dot(r0.xyz, cb0[5].xyz);
     r1.z = dot(r0.xyz, cb0[6].xyz);
+
+    // Custom Lift Gamma Gain?
     r0.xyz = r1.xyz * cb0[9].xyz + cb0[7].xyz;
     r1.xyz = saturate(r0.xyz * float3(renodx::math::FLT_MAX, renodx::math::FLT_MAX, renodx::math::FLT_MAX) + float3(0.5,0.5,0.5));
     r1.xyz = r1.xyz * float3(2,2,2) + float3(-1,-1,-1);
@@ -60,7 +69,11 @@ void main(uint3 vThreadID: SV_DispatchThreadID) // manual fix
     r0.xyz = cb0[8].xyz * r0.xyz;
     r0.xyz = exp2(r0.xyz);
     r0.xyz = r1.xyz * r0.xyz;
+
+    // Do NOT feed negative values
     r0.xyz = max(float3(0,0,0), r0.xyz);
+
+    // HSV
     r0.w = cmp(r0.y >= r0.z);
     r0.w = r0.w ? 1.000000 : 0;
     r1.xy = r0.zy;
@@ -68,6 +81,8 @@ void main(uint3 vThreadID: SV_DispatchThreadID) // manual fix
     r2.xy = -r1.xy + r0.yz;
     r2.zw = float2(1,-1);
     r1.xyzw = r0.wwww * r2.xyzw + r1.xyzw;
+
+    // HSV stuff
     r0.w = cmp(r0.x >= r1.x);
     r0.w = r0.w ? 1.000000 : 0;
     r2.xyz = r1.xyw;
@@ -84,18 +99,26 @@ void main(uint3 vThreadID: SV_DispatchThreadID) // manual fix
     r2.x = abs(r1.y);
     r1.y = 9.99999975e-005 + r1.x;
     r2.z = r0.w / r1.y;
+
+    // Hue vs Sat
     r2.yw = float2(0.25,0.25);
     r0.w = t0.SampleLevel(s0_s, r2.xy, 0).y;
     r0.w = saturate(r0.w);
     r0.w = r0.w + r0.w;
+
+    // Sat vs Sat
     r1.y = t0.SampleLevel(s0_s, r2.zw, 0).z;
     r1.y = saturate(r1.y);
     r0.w = dot(r1.yy, r0.ww);
+
+    // Luma vs Sat
     r3.x = dot(r0.xyz, float3(0.212672904,0.715152204,0.0721750036));
     r3.yw = float2(0.25,0.25);
     r0.x = t0.SampleLevel(s0_s, r3.xy, 0).w;
     r0.x = saturate(r0.x);
     r0.x = r0.x * r0.w;
+
+    // Hue Shift & Hue vs Hue
     r3.z = cb0[3].x + r2.x;
     r0.y = t0.SampleLevel(s0_s, r3.zw, 0).x;
     r0.y = saturate(r0.y);
@@ -111,11 +134,15 @@ void main(uint3 vThreadID: SV_DispatchThreadID) // manual fix
     r0.yzw = saturate(float3(-1,-1,-1) + abs(r0.yzw));
     r0.yzw = float3(-1,-1,-1) + r0.yzw;
     r0.yzw = r2.zzz * r0.yzw + float3(1,1,1);
+
+    // Saturation
     r1.yzw = r1.xxx * r0.yzw;
     r0.x = dot(cb0[3].yy, r0.xx);
     r1.y = dot(r1.yzw, float3(0.212672904,0.715152204,0.0721750036));
     r0.yzw = r1.xxx * r0.yzw + -r1.yyy;
     r0.xyz = r0.xxx * r0.yzw + r1.yyy;
+
+    // Custom Tonemap
     r0.xyz = max(float3(0,0,0), r0.xyz);
     r1.xyz = cb0[10].xxx * r0.xyz;
     r2.xyzw = cmp(r1.xxyy < cb0[10].yzyz);
