@@ -68,12 +68,34 @@ bool isResScaleEnabled = false;
 renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x5545BDF0),          // Most pre-rendered cutscenes
     CustomShaderEntry(0x998DD3D3),          // Startup pre-rendered cutscene
-    // CustomShaderEntry(),                 // UI alpha
+    CustomShaderEntry(0xBE524E6A),          // UI alpha
+    CustomShaderEntry(0x344D84FC),          // Weapon DoF
 
-    UpgradeRTVReplaceShader(0x2FCBCED7),    // tonemapper Gameplay 1
-    UpgradeRTVReplaceShader(0x3F9EE1FB),    // tonemapper Cutscene 1
-    UpgradeRTVShader(0xC372881A),           // FXAA
-    // UpgradeRTVShader(),                  // Resolution Scale 1st pass
+    CustomShaderEntry(0x387C0B61),          // Video boards - Episode 2 - NaN fix
+    CustomShaderEntry(0x737BB62A),          // Swamp grass 1 - Episode 3 - NaN fix
+    CustomShaderEntry(0x2731D261),          // Swamp grass 2 - Episode 3 - NaN fix
+    CustomShaderEntry(0xBB4A684C),          // Bricks 1 - Episode 3 - NaN fix
+    CustomShaderEntry(0xA490495F),          // Stadium 1 - Episode 3 - NaN fix
+    CustomShaderEntry(0xCE092B4B),          // Stadium 2 - Episode 3 - NaN fix
+    CustomShaderEntry(0xE2E13D29),          // Fountain 1 - Episode 3 - NaN fix
+    CustomShaderEntry(0x55DE9CE8),          // Fountain 2 - Episode 3 - NaN fix
+    CustomShaderEntry(0x38A757EA),          // Car 1 - Episode 4 - NaN fix
+    CustomShaderEntry(0x9DB77D99),          // Bottom of car - Episode 4 - NaN fix
+    CustomShaderEntry(0x87D43186),          // Foliage 1 - Episode 4 - NaN fix
+    CustomShaderEntry(0xA12E3860),          // Alarm light 1 - Episode 4 - NaN fix
+    
+    UpgradeRTVReplaceShader(0x2FCBCED7),    // tonemapper Gameplay 1 general gameplay
+    UpgradeRTVReplaceShader(0x13DD0A6B),    // tonemapper Gameplay 2 scanner 3x - 5x
+    UpgradeRTVReplaceShader(0x9802B64E),    // tonemapper Gameplay 3 scanner 1x - 2x
+    UpgradeRTVReplaceShader(0xB8022AA7),    // tonemapper Gameplay 4 aim down sights - pistol
+    UpgradeRTVReplaceShader(0xB771AC71),    // tonemapper Gameplay 5 aim down sights - stun gun
+    UpgradeRTVReplaceShader(0x1FEA8232),    // tonemapper Gameplay 6 aim down sights - bald eagle
+    UpgradeRTVReplaceShader(0x8D44E8C8),    // tonemapper Gameplay 7 episode 3 stadium landscape
+    UpgradeRTVReplaceShader(0x3F9EE1FB),    // tonemapper Cutscene 1 also used in some gameplay
+
+    UpgradeRTVShader(0xC372881A),           // FXAA High
+    UpgradeRTVShader(0xDACCCB84),           // FXAA Medium
+    UpgradeRTVShader(0x95C85DC2),           // FXAA Low
     CustomShaderEntryCallback(0x377D3BCE, [](reshade::api::command_list* cmd_list) {  // Resolution Scale 2nd pass
     isResScaleEnabled = true;
     return true;
@@ -100,9 +122,9 @@ renodx::utils::settings::Settings settings = {
         .can_reset = true,
         .label = "Tone Mapper",
         .section = "Tone Mapping",
-        .tooltip = "Sets the tone mapper type",
+        .tooltip = "Sets the tonemapper type",
         .labels = {"Vanilla", "None", "RenoDRT (Daniele)", "RenoDRT (Reinhard)"},
-        .tint = 0xAFD8B5,
+        // .tint = 0xAFD8B5,
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
@@ -113,7 +135,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Peak Brightness",
         .section = "Tone Mapping",
         .tooltip = "Sets the value of peak white in nits",
-        .tint = 0xDF7211,
+        // .tint = 0xDF7211,
         .min = 48.f,
         .max = 4000.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
@@ -125,7 +147,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Game Brightness",
         .section = "Tone Mapping",
         .tooltip = "Sets the value of 100% white in nits",
-        .tint = 0xDF7211,
+        // .tint = 0xDF7211,
         .min = 48.f,
         .max = 500.f,
     },
@@ -136,7 +158,7 @@ renodx::utils::settings::Settings settings = {
         .label = "UI Brightness",
         .section = "Tone Mapping",
         .tooltip = "Sets the brightness of UI and HUD elements in nits",
-        .tint = 0xDF7211,
+        // .tint = 0xDF7211,
         .min = 48.f,
         .max = 500.f,
     },
@@ -149,7 +171,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Tone Mapping",
         .tooltip = "Emulates a display EOTF.",
         .labels = {"SRGB", "Off", "BT.1886"},
-        .tint = 0xAFD8B5,
+        // .tint = 0xAFD8B5,
         .is_visible = []() { return current_settings_mode >= 1; },
     },
     new renodx::utils::settings::Setting{
@@ -161,7 +183,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Tone Mapping",
         .tooltip = "Luminance scales colors consistently while per-channel saturates and blows out sooner",
         .labels = {"Luminance", "Per Channel"},
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
@@ -173,7 +195,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Hue Processor",
         .section = "Tone Mapping",
         .labels = {"OKLab", "ICtCp", "darktable UCS"},
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
@@ -184,7 +206,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Hue Shift",
         .section = "Tone Mapping",
         .tooltip = "Hue-shift emulation strength.",
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .min = 0.f,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f && shader_injection.toneMapPerChannel == 0.f; },
@@ -197,7 +219,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 0.f,
         .label = "Hue Correction",
         .section = "Tone Mapping",
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
         .parse = [](float value) { return value * 0.01f; },
@@ -209,7 +231,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 1.f,
         .label = "Exposure",
         .section = "Color Grading",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 10.f,
         .format = "%.2f",
         .is_visible = []() { return current_settings_mode >= 1; },
@@ -220,7 +242,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Highlights",
         .section = "Color Grading",
-        .tint = 0x96AD50,
+        // .tint = 0x96AD50,
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
         .is_visible = []() { return current_settings_mode >= 1; },
@@ -231,7 +253,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Shadows",
         .section = "Color Grading",
-        .tint = 0x142616,
+        // .tint = 0x142616,
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
         .is_visible = []() { return current_settings_mode >= 1; },
@@ -242,7 +264,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Contrast",
         .section = "Color Grading",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
     },
@@ -252,7 +274,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Saturation",
         .section = "Color Grading",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
     },
@@ -263,7 +285,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Highlights Saturation",
         .section = "Color Grading",
         .tooltip = "Adds or removes highlights color.",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
         .parse = [](float value) { return 1.f - value * 0.02f; },
@@ -276,7 +298,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Blowout",
         .section = "Color Grading",
         .tooltip = "Controls highlight desaturation due to overexposure.",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
         .parse = [](float value) { return fmax(0.00001f, value * 0.01f); },
@@ -287,7 +309,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 71.f,
         .label = "Flare",
         .section = "Color Grading",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 2.f; },
         .parse = [](float value) { return value * 0.01f; },
@@ -298,7 +320,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 100.f,
         .label = "Clipping",
         .section = "Color Grading",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType == 3.f; },
         .parse = [](float value) { return value; },
@@ -310,7 +332,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 100.f,
         .label = "LUT Strength",
         .section = "Color Grading",
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType != 1.f; },
         .parse = [](float value) { return value * 0.01f; },
@@ -324,7 +346,7 @@ renodx::utils::settings::Settings settings = {
         .label = "LUT Sampling",
         .section = "Color Grading",
         .labels = {"Trilinear", "Tetrahedral"},
-        .tint = 0x3A5953,
+        // .tint = 0x3A5953,
         .is_enabled = []() { return shader_injection.toneMapType != 1.f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
@@ -334,7 +356,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Bloom",
         .section = "Effects",
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
     },
@@ -344,7 +366,7 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Vignette",
         .section = "Effects",
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
     },
@@ -354,10 +376,21 @@ renodx::utils::settings::Settings settings = {
         .default_value = 0.f,
         .label = "Perceptual Film Grain",
         .section = "Effects",
-        .tint = 0xEC4E1B,
+        // .tint = 0xEC4E1B,
         .max = 100.f,
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 1; },
+    },
+        new renodx::utils::settings::Setting{
+        .key = "FPSLimit",
+        .binding = &renodx::utils::swapchain::fps_limit,
+        .default_value = 0.f,
+        .label = "FPS Limit",
+        .section = "FPS Limiter",
+        .tooltip = "0 = Uncapped; maximum uncapped FPS is 200\n200 FPS cap can be removed with console command\nGameTime.MaxVariableFPS 0",
+        // .tint = 0x0D1D34,
+        .min = 0.f,
+        .max = 240.f,
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
@@ -553,6 +586,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .old_format = reshade::api::format::r11g11b10_float,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .ignore_size = true,
+      });
+      //  RGBA8_unorm
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r8g8b8a8_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+        //   .ignore_size = true,
+          .aspect_ratio = 16.f / 9.f,
       });
 
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);

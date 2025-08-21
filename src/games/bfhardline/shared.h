@@ -1,5 +1,6 @@
 #ifndef SRC_DAI_SHARED_H_
 #define SRC_DAI_SHARED_H_
+#define RENODX_COLOR_GRADE_HIGHLIGHTS_VERSION 2
 #define CUSTOM_GRAIN_STRENGTH             injectedData.custom_grain_strength
 #define CUSTOM_RANDOM                     injectedData.custom_random
 
