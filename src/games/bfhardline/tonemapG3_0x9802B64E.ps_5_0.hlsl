@@ -107,7 +107,6 @@ void main(
   // r0.xyz = r0.www * filmGrainColorScale.xyz + r0.xyz;
   // o0.w = dot(r0.xyz, float3(0.298999995,0.587000012,0.114));
   // o0.xyz = r0.xyz;
-
   o0.rgb = applyUserTonemap(untonemapped, colorGradingTexture, colorGradingTextureSampler_s, LUTless, midGray, true);
   if (!injectedData.resScaleCheck) {
   if (injectedData.custom_grain_strength > 0.f) {

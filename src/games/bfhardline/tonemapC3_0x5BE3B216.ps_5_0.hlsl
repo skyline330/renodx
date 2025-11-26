@@ -1,6 +1,6 @@
 #include "./common.hlsl"
 
-// ---- Created with 3Dmigoto v1.4.1 on Tue Aug  5 02:24:43 2025
+// ---- Created with 3Dmigoto v1.4.1 on Thu Aug 21 23:43:47 2025
 
 cbuffer _Globals : register(b0)
 {
@@ -46,10 +46,14 @@ cbuffer _Globals : register(b0)
 
 SamplerState mainTextureSampler_s : register(s0);
 SamplerState colorGradingTextureSampler_s : register(s1);
-SamplerState tonemapBloomTextureSampler_s : register(s2);
+SamplerState distortionTextureSampler_s : register(s2);
+SamplerState tonemapBloomTextureSampler_s : register(s3);
+SamplerState ironsightsDofTextureSampler_s : register(s4);
 Texture2D<float4> mainTexture : register(t0);
 Texture3D<float4> colorGradingTexture : register(t1);
-Texture2D<float4> tonemapBloomTexture : register(t2);
+Texture2D<float4> distortionTexture : register(t2);
+Texture2D<float4> tonemapBloomTexture : register(t3);
+Texture2D<float4> ironsightsDofTexture : register(t4);
 
 
 // 3Dmigoto declarations
@@ -62,16 +66,34 @@ void main(
   float2 v2 : TEXCOORD1,
   out float4 o0 : SV_Target0)
 {
-  float4 r0,r1,r2;
+  float4 r0,r1,r2,r3;
   uint4 bitmask, uiDest;
   float4 fDest;
 
-  r0.xyz = mainTexture.Sample(mainTextureSampler_s, v2.xy).xyz;
-  r1.xyz = (int3)r0.xyz & int3(0x7fffffff,0x7fffffff,0x7fffffff);
-  r1.xyz = cmp((int3)r1.xyz == int3(0x7f800000,0x7f800000,0x7f800000));
-  r0.xyz = r1.xyz ? float3(10000,10000,10000) : r0.xyz;
-  r1.xyz = tonemapBloomTexture.Sample(tonemapBloomTextureSampler_s, v2.xy).xyz;
-  r0.xyz = r1.xyz * bloomScale.xyz * injectedData.fxBloom + r0.xyz;
+  r0.xyzw = ironsightsDofTexture.Sample(ironsightsDofTextureSampler_s, v2.xy).xyzw;
+  r0.xyz = r0.xyz * r0.xyz;
+  r0.xyz = ironsightsDofParams.yyy * r0.xyz;
+  r1.x = ironsightsDofParams.x * r0.w;
+  r0.w = -r0.w * ironsightsDofParams.x + 1;
+  r0.xyz = r1.xxx * r0.xyz;
+  r1.xy = distortionTexture.Sample(distortionTextureSampler_s, v2.xy).xy;
+  r1.xy = r1.xy * distortionScaleOffset.xy + distortionScaleOffset.zw;
+  r1.xy = v2.xy + r1.xy;
+  r2.xyz = mainTexture.Sample(mainTextureSampler_s, r1.xy).xyz;
+  r3.xyz = (int3)r2.xyz & int3(0x7fffffff,0x7fffffff,0x7fffffff);
+  r3.xyz = cmp((int3)r3.xyz == int3(0x7f800000,0x7f800000,0x7f800000));
+  r2.xyz = r3.xyz ? float3(10000,10000,10000) : r2.xyz;
+  r0.xyz = r2.xyz * r0.www + r0.xyz;
+  r1.zw = chromostereopsisParams.yz + r1.xy;
+  r0.w = mainTexture.Sample(mainTextureSampler_s, r1.zw).x;
+  r0.w = r0.w + -r0.x;
+  r0.x = chromostereopsisParams.x * r0.w + r0.x;
+  r1.zw = -chromostereopsisParams.yz + r1.xy;
+  r2.xyz = tonemapBloomTexture.Sample(tonemapBloomTextureSampler_s, r1.xy).xyz;
+  r0.w = mainTexture.Sample(mainTextureSampler_s, r1.zw).z;
+  r0.w = r0.w + -r0.z;
+  r0.z = chromostereopsisParams.x * r0.w + r0.z;
+  r0.xyz = r2.xyz * bloomScale.xyz * injectedData.fxBloom+ r0.xyz;
   r0.xyz = colorScale.xyz * r0.xyz;
   r1.xy = float2(-0.5,-0.5) + v2.xy;
   r1.xy = vignetteParams.xy * r1.xy * min(1, injectedData.fxVignette);
@@ -106,6 +128,5 @@ void main(
     o0.rgb = renodx::color::gamma::EncodeSafe(o0.rgb, 2.2f);
   }
   o0.a = renodx::color::y::from::BT709(o0.rgb);
-
   return;
 }

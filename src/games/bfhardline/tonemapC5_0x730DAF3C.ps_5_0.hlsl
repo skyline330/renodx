@@ -1,6 +1,6 @@
 #include "./common.hlsl"
 
-// ---- Created with 3Dmigoto v1.4.1 on Tue Aug  5 02:24:43 2025
+// ---- Created with 3Dmigoto v1.4.1 on Thu Aug 21 23:50:29 2025
 
 cbuffer _Globals : register(b0)
 {
@@ -47,9 +47,11 @@ cbuffer _Globals : register(b0)
 SamplerState mainTextureSampler_s : register(s0);
 SamplerState colorGradingTextureSampler_s : register(s1);
 SamplerState tonemapBloomTextureSampler_s : register(s2);
+SamplerState ironsightsDofTextureSampler_s : register(s3);
 Texture2D<float4> mainTexture : register(t0);
 Texture3D<float4> colorGradingTexture : register(t1);
 Texture2D<float4> tonemapBloomTexture : register(t2);
+Texture2D<float4> ironsightsDofTexture : register(t3);
 
 
 // 3Dmigoto declarations
@@ -66,12 +68,27 @@ void main(
   uint4 bitmask, uiDest;
   float4 fDest;
 
-  r0.xyz = mainTexture.Sample(mainTextureSampler_s, v2.xy).xyz;
-  r1.xyz = (int3)r0.xyz & int3(0x7fffffff,0x7fffffff,0x7fffffff);
+  r0.xy = chromostereopsisParams.yz + v2.xy;
+  r0.x = mainTexture.Sample(mainTextureSampler_s, r0.xy).x;
+  r0.yzw = mainTexture.Sample(mainTextureSampler_s, v2.xy).xyz;
+  r1.xyz = (int3)r0.yzw & int3(0x7fffffff,0x7fffffff,0x7fffffff);
   r1.xyz = cmp((int3)r1.xyz == int3(0x7f800000,0x7f800000,0x7f800000));
-  r0.xyz = r1.xyz ? float3(10000,10000,10000) : r0.xyz;
+  r0.yzw = r1.xyz ? float3(10000,10000,10000) : r0.yzw;
+  r1.xyzw = ironsightsDofTexture.Sample(ironsightsDofTextureSampler_s, v2.xy).xyzw;
+  r1.xyz = r1.xyz * r1.xyz;
+  r1.xyz = ironsightsDofParams.yyy * r1.xyz;
+  r2.x = ironsightsDofParams.x * r1.w;
+  r1.w = -r1.w * ironsightsDofParams.x + 1;
+  r1.xyz = r2.xxx * r1.xyz;
+  r0.yzw = r0.yzw * r1.www + r1.xyz;
+  r0.x = r0.x + -r0.y;
+  r0.y = chromostereopsisParams.x * r0.x + r0.y;
+  r1.xy = -chromostereopsisParams.yz + v2.xy;
+  r0.x = mainTexture.Sample(mainTextureSampler_s, r1.xy).z;
+  r0.x = r0.x + -r0.w;
+  r0.w = chromostereopsisParams.x * r0.x + r0.w;
   r1.xyz = tonemapBloomTexture.Sample(tonemapBloomTextureSampler_s, v2.xy).xyz;
-  r0.xyz = r1.xyz * bloomScale.xyz * injectedData.fxBloom + r0.xyz;
+  r0.xyz = r1.xyz * bloomScale.xyz * injectedData.fxBloom + r0.yzw;
   r0.xyz = colorScale.xyz * r0.xyz;
   r1.xy = float2(-0.5,-0.5) + v2.xy;
   r1.xy = vignetteParams.xy * r1.xy * min(1, injectedData.fxVignette);
@@ -106,6 +123,5 @@ void main(
     o0.rgb = renodx::color::gamma::EncodeSafe(o0.rgb, 2.2f);
   }
   o0.a = renodx::color::y::from::BT709(o0.rgb);
-
   return;
 }

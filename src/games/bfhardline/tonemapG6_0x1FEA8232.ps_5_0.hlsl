@@ -105,9 +105,9 @@ void main(
   r0.xyz = r0.xyz * float3(0.774596989,0.774596989,0.774596989) + float3(1.24270999,1.24270999,1.24270999);
   r0.xyz = r2.xyz * r0.xyz;
   r0.xyz = r1.xyz / r0.xyz;
-  // r0.xyz = sqrt(r0.xyz);
   float3 LUTless = r0.xyz;
   float midGray = 0.161404936911f;
+  // r0.xyz = sqrt(r0.xyz);
   // r0.xyz = r0.xyz * float3(0.96875,0.96875,0.96875) + float3(0.015625,0.015625,0.015625);
   // r0.xyz = colorGradingTexture.Sample(colorGradingTextureSampler_s, r0.xyz).xyz;
   // r1.xy = v2.xy * filmGrainTextureScaleAndOffset.xy + filmGrainTextureScaleAndOffset.zw;

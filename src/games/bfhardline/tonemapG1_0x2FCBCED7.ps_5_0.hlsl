@@ -79,7 +79,7 @@ void main(
   r0.xyz = r0.xyz * bloomScale.xyz * injectedData.fxBloom + r1.xyz;
   r0.xyz = colorScale.xyz * r0.xyz;
   r1.xy = float2(-0.5,-0.5) + v2.xy;
-  r1.xy = vignetteParams.xy * r1.xy * max(1, injectedData.fxVignette);
+  r1.xy = vignetteParams.xy * r1.xy * min(1, injectedData.fxVignette);
   r0.w = dot(r1.xy, r1.xy);
   r0.w = saturate(-r0.w * vignetteColor.w + 1);
   r0.w = log2(r0.w);
@@ -87,7 +87,6 @@ void main(
   r0.w = exp2(r0.w);
   r0.xyz = r0.xyz * r0.www;
   float3 untonemapped = r0.xyz;
-
   r1.xyz = float3(0.985521019,0.985521019,0.985521019) * r0.xyz;
   r2.xyz = r0.xyz * float3(0.985521019,0.985521019,0.985521019) + float3(0.058662001,0.058662001,0.058662001);
   r1.xyz = r2.xyz * r1.xyz;
@@ -95,17 +94,14 @@ void main(
   r0.xyz = r0.xyz * float3(0.774596989,0.774596989,0.774596989) + float3(1.24270999,1.24270999,1.24270999);
   r0.xyz = r2.xyz * r0.xyz;
   r0.xyz = r1.xyz / r0.xyz;
-
-  // r0.xyz = sqrt(r0.xyz);
   float3 LUTless = r0.xyz;
   float midGray = 0.161404936911f;
-
+  // r0.xyz = sqrt(r0.xyz);
   // r0.xyz = r0.xyz * float3(0.96875,0.96875,0.96875) + float3(0.015625,0.015625,0.015625);
   // r0.xyz = colorGradingTexture.Sample(colorGradingTextureSampler_s, r0.xyz).xyz;
   // o0.w = dot(r0.xyz, float3(0.298999995,0.587000012,0.114));
   // o0.xyz = r0.xyz;
   // o0.xyz = untonemapped;
-
   o0.rgb = applyUserTonemap(untonemapped, colorGradingTexture, colorGradingTextureSampler_s, LUTless, midGray, true);
   if (!injectedData.resScaleCheck) {
   if (injectedData.custom_grain_strength > 0.f) {
