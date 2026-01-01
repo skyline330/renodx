@@ -233,6 +233,59 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
     },
     new renodx::utils::settings::Setting{
+        .key = "fxFSRUpscaling",
+        .binding = &shader_injection.fxFSRUpscaling,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "FSR 1.0 Upscaling (EASU)",
+        .section = "Effects",
+        .tooltip = "Enable FSR 1.0 Edge Adaptive Spatial Upsampling."
+                   "\nProvides better quality when upscaling from lower resolutions.",
+        .labels = {"Off", "On"},
+    },
+    new renodx::utils::settings::Setting{
+        .key = "fxRCASSharpening",
+        .binding = &shader_injection.fxRCASSharpening,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "FSR RCAS Sharpening",
+        .section = "Effects",
+        .tooltip = "Enable Robust Contrast Adaptive Sharpening."
+                   "\nCan be used independently of FSR upscaling.",
+        .labels = {"Off", "On"},
+    },
+        new renodx::utils::settings::Setting{
+        .key = "fxRCASAmount",
+        .binding = &shader_injection.fxRCASAmount,
+        .default_value = 50.f,
+        .label = "RCAS Sharpening Amount",
+        .section = "Effects",
+        .tooltip = "Adjusts RCAS sharpening strength.",
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.fxRCASSharpening >= 1.f; },
+        .parse = [](float value) { return value * 0.01f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "VideoAutoHDR",
+        .binding = &shader_injection.toneMapHdrVideo,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 1.f,
+        .label = "Video AutoHDR",
+        .section = "Effects",
+        .tooltip = "Upgrades SDR videos to HDR.",
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapVideoNits",
+        .binding = &shader_injection.toneMapVideoNits,
+        .default_value = 500.f,
+        .can_reset = false,
+        .label = "Video Peak Brightness",
+        .section = "Effects",
+        .tooltip = "Sets the peak brightness for video content in nits",
+        .min = 48.f,
+        .max = 4000.f,
+    },
+    new renodx::utils::settings::Setting{
         .key = "swapchainCustomColorSpace",
         .binding = &shader_injection.swapchainCustomColorSpace,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
@@ -402,32 +455,12 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
                                                                      .use_resource_view_cloning = true,
                                                                      .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::unordered_access});*/
 
-      //  RGBA8_typeless - back buffer aspect ratio (main game)
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r8g8b8a8_typeless,
-                                                                     .new_format = reshade::api::format::r16g16b16a16_float,
-                                                                     .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
-                                                                     .aspect_ratio_tolerance = 0.02f});
-
-      // Additional aspect ratios for character menu, dialogs, cutscenes, etc.
-      const std::vector<float> additional_aspect_ratios = {
-          2016.f / 960.f,  // 16:9 and below
-          1750.f / 750.f,  // 19:9
-          1584.f / 624.f,  // 19.5:9
-          1704.f / 624.f,  // 21:9
-          1728.f / 624.f,  // 32:9
-          960.f / 624.f,  // Character portrait with 0.8 scale
-          2160.f / 1272.f, // Mission finish logo
-          1296.f / 816.f,  // Character portrait in Shiyu
-          1.f,  // Character portrait
-      };
-
-      for (const float& ratio : additional_aspect_ratios) {
-        renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r8g8b8a8_typeless,
-                                                                        .new_format = reshade::api::format::r16g16b16a16_float,
-                                                                        .aspect_ratio = ratio,
-                                                                        .aspect_ratio_tolerance = 0.02f,
-});
-      }
+      //  R8G8B8A8_typeless resources - Main game
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r8g8b8a8_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .ignore_size = true,
+      });
 
       {
         auto* setting = new renodx::utils::settings::Setting{
