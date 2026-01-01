@@ -1,6 +1,5 @@
 #include "../../tonemap.hlsl"
 
-// More gambling uberposts (flash effect)
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -89,33 +88,28 @@ cbuffer $Globals : register(b0) {
   float4 _FullscreenProjMat[4] : packoffset(c161.x);
   float4 _HDRParams : packoffset(c165.x);
   float4 _PixelCoordToViewDirWS[4] : packoffset(c166.x);
-  float4 _SunDiskColor : packoffset(c170.x);
-  float4 _MoonParams : packoffset(c171.x);
-  float4 _MoonColor : packoffset(c172.x);
-  float4 _MoonGlowColor : packoffset(c173.x);
-  float4 _MoonAndGalaxyDir[4] : packoffset(c174.x);
-  float _SunDiskIntensity : packoffset(c178.x);
-  float _MoonPhaseAlphaBlend : packoffset(c178.y);
-  float _GalaxyIntensity : packoffset(c178.z);
-  float _StarsTwinkSpeed : packoffset(c178.w);
-  float _StarsIntensity : packoffset(c179.x);
-  float4 _MoonGlow2Params : packoffset(c180.x);
-  float3 _HighCloudColor : packoffset(c181.x);
-  float _CloudSwitch : packoffset(c181.w);
-  float4 _CloudParams0 : packoffset(c182.x);
-  float4 _CloudParams1 : packoffset(c183.x);
-  float4 _CloudParams2 : packoffset(c184.x);
-  float4 _CloudParams3 : packoffset(c185.x);
-  float4 _CloudPhaseColorG : packoffset(c186.x);
-  float4 _CloudShadowMoveSpeed : packoffset(c187.x);
-  float4 _CloudLightParams1 : packoffset(c188.x);
-  float4 _CloudLightParams2 : packoffset(c189.x);
-  float4 _GlobalWindDirection : packoffset(c190.x);
-  float _OverrideSkyWeight : packoffset(c191.x);
-  float4 _OverrideSkyBtnColor : packoffset(c192.x);
-  float4 _OverrideSkyTopColor : packoffset(c193.x);
-  float4 _OverrideLowCloudLightColor : packoffset(c194.x);
-  float4 _OverrideLowCloudDarkColor : packoffset(c195.x);
+  float4 _DaySkyParamsPartA[4] : packoffset(c170.x);
+  float4 _NightSkyParamsPartA[4] : packoffset(c174.x);
+  float4 _MoonAndGalaxyDir[4] : packoffset(c178.x);
+  float4 _MoonGlow2Params : packoffset(c182.x);
+  float3 _HighCloudColor : packoffset(c183.x);
+  float _CloudSwitch : packoffset(c183.w);
+  float4 _CloudParams0 : packoffset(c184.x);
+  float4 _CloudParams1 : packoffset(c185.x);
+  float4 _CloudParams2 : packoffset(c186.x);
+  float4 _CloudParams3 : packoffset(c187.x);
+  float4 _CloudPhaseColorG : packoffset(c188.x);
+  float4 _CloudShadowMoveSpeed : packoffset(c189.x);
+  float4 _CloudLightParams1 : packoffset(c190.x);
+  float4 _CloudLightParams2 : packoffset(c191.x);
+  float4 _SkyGridParam : packoffset(c192.x);
+  float3 _SkyGridColor : packoffset(c193.x);
+  float4 _GlobalWindDirection : packoffset(c194.x);
+  float _OverrideSkyWeight : packoffset(c195.x);
+  float4 _OverrideSkyBtnColor : packoffset(c196.x);
+  float4 _OverrideSkyTopColor : packoffset(c197.x);
+  float4 _OverrideLowCloudLightColor : packoffset(c198.x);
+  float4 _OverrideLowCloudDarkColor : packoffset(c199.x);
 };
 
 cbuffer UberPostBaseCBuffer : register(b1) {
@@ -144,16 +138,19 @@ cbuffer UberPostBaseCBuffer : register(b1) {
   float4 UberPostBasePacked4 : packoffset(c022.x);
   float4 UberPostOldCRTPacked : packoffset(c023.x);
   float4 _ChromaCenter : packoffset(c024.x);
-  float4 _VREffectsScanlineParams : packoffset(c025.x);
-  float4 _VREffectsSliceParams : packoffset(c026.x);
-  float4 UberPostGlitchParkedParams1 : packoffset(c027.x);
-  float4 UberPostGlitchParkedParams2 : packoffset(c028.x);
-  float4 GlitchTex1And2Scale : packoffset(c029.x);
-  float4 _CharacterGhostParams : packoffset(c030.x);
-  float4 _SceneWeatherSandstormParams01 : packoffset(c031.x);
-  float4 _SceneWeatherSandstormParams02 : packoffset(c032.x);
-  float4 _SceneWeatherSandstormParams03 : packoffset(c033.x);
-  float4 _SceneWeatherSandstormParams04 : packoffset(c034.x);
+  float4 _ChromaticColorR : packoffset(c025.x);
+  float4 _ChromaticColorG : packoffset(c026.x);
+  float4 _ChromaticColorB : packoffset(c027.x);
+  float4 _VREffectsScanlineParams : packoffset(c028.x);
+  float4 _VREffectsSliceParams : packoffset(c029.x);
+  float4 UberPostGlitchParkedParams1 : packoffset(c030.x);
+  float4 UberPostGlitchParkedParams2 : packoffset(c031.x);
+  float4 GlitchTex1And2Scale : packoffset(c032.x);
+  float4 _CharacterGhostParams : packoffset(c033.x);
+  float4 _SceneWeatherSandstormParams01 : packoffset(c034.x);
+  float4 _SceneWeatherSandstormParams02 : packoffset(c035.x);
+  float4 _SceneWeatherSandstormParams03 : packoffset(c036.x);
+  float4 _SceneWeatherSandstormParams04 : packoffset(c037.x);
 };
 
 cbuffer UberPostScreenEffectsBaseCBuffer : register(b2) {
@@ -383,6 +380,7 @@ float4 main(
   float _467 = tonemapped.x;
   float _468 = tonemapped.y;
   float _469 = tonemapped.z;
+  // Internal LUT
   /*
   float _441 = saturate((log2((_418 * 5.555555820465088f) + 0.047995999455451965f) * 0.07349978387355804f) + 0.3860360085964203f) * _Lut_Params.z;
   float _442 = floor(_441);
@@ -393,7 +391,8 @@ float4 main(
   float4 _457 = _InternalLut.SampleLevel(s_linear_clamp_sampler, float2(_450, _448), 0.0f);
   float _467 = ((_453.x - _457.x) * _451) + _457.x;
   float _468 = ((_453.y - _457.y) * _451) + _457.y;
-  float _469 = ((_453.z - _457.z) * _451) + _457.z;*/
+  float _469 = ((_453.z - _457.z) * _451) + _457.z;
+  */
   if (UberPostBasePacked1.x > 0.0f) {
     float4 _484 = _Grain_Texture.Sample(s_linear_repeat_sampler, float2(((_Grain_TilingParams.x * TEXCOORD.x) + _Grain_TilingParams.z), ((_Grain_TilingParams.y * TEXCOORD.y) + _Grain_TilingParams.w)));
     float _487 = (_484.w + -0.5f) * 2.0f;
@@ -505,30 +504,27 @@ float4 main(
   float _967 = (((UberPostColorCorrectionPacked0.x - _931) + ((UberPostColorCorrectionPacked1.x - UberPostColorCorrectionPacked0.x) * _941)) * UberPostColorCorrectionPacked2.x) + _931;
   float _968 = (((UberPostColorCorrectionPacked0.y - _932) + ((UberPostColorCorrectionPacked1.y - UberPostColorCorrectionPacked0.y) * _941)) * UberPostColorCorrectionPacked2.x) + _932;
   float _969 = (((UberPostColorCorrectionPacked0.z - _933) + ((UberPostColorCorrectionPacked1.z - UberPostColorCorrectionPacked0.z) * _941)) * UberPostColorCorrectionPacked2.x) + _933;
-
-  // HDR FX Mask Blend
-  float3 result = float3(_967, _968, _969);
-  if (UberPostColorCorrectionPacked2.w > 0.5f) {
-    float m = smoothstep(0.0f, 1.0f, _FXMaskForScene.Sample(s_linear_clamp_sampler, TEXCOORD).x);
-
-    if (UberPostColorCorrectionPacked3.w < 0.5f) {
-      // Simple lighten
-      float3 blend_factor = pow(m, 2.2f);
-      result = result * (1.0f + blend_factor * 0.5f);
-    } else {
-      // Overlay
-      float3 blend = UberPostColorCorrectionPacked3.xyz;
-      result = result * lerp(1.0f, blend * 2.0f, m);
-    }
-  }
-  _1042 = result.x;
-  _1043 = result.y;
-  _1044 = result.z;
-
-  // Original FX Mask
-  /*
   if (UberPostColorCorrectionPacked2.w > 0.5f) {
     float4 _973 = _FXMaskForScene.Sample(s_linear_clamp_sampler, float2(TEXCOORD.x, TEXCOORD.y));
+    // HDR FX Mask Blend
+    float fxMask = _973.x;
+    if (UberPostColorCorrectionPacked3.w < 0.5f) {
+      // Additive blend mode
+      _1042 = fxMask + _967;
+      _1043 = fxMask + _968;
+      _1044 = fxMask + _969;
+    } else {
+      // Complex blend mode (preserve HDR)
+      float3 fxColor = float3(UberPostColorCorrectionPacked3.x, UberPostColorCorrectionPacked3.y, UberPostColorCorrectionPacked3.z);
+      float3 baseColor = float3(_967, _968, _969);
+      
+      // Blend based on mask strength
+      float3 blended = lerp(baseColor, fxColor, fxMask);
+      _1042 = blended.x;
+      _1043 = blended.y;
+      _1044 = blended.z;
+    }
+    /*
     if (UberPostColorCorrectionPacked3.w < 0.5f) {
       _1042 = min((_973.x + _967), 1.0f);
       _1043 = min((_973.x + _968), 1.0f);
@@ -542,12 +538,12 @@ float4 main(
       _1043 = (((((1.0f - (((1.0f - _968) * 2.0f) * (1.0f - UberPostColorCorrectionPacked3.y))) * saturate(1.0f - _1011)) + (((_968 * 2.0f) * _1011) * UberPostColorCorrectionPacked3.y)) * _973.x) + (_1031 * _968));
       _1044 = (((((1.0f - (((1.0f - _969) * 2.0f) * (1.0f - UberPostColorCorrectionPacked3.z))) * saturate(1.0f - _1012)) + (((_969 * 2.0f) * _1012) * UberPostColorCorrectionPacked3.z)) * _973.x) + (_1031 * _969));
     }
+    */
   } else {
     _1042 = _967;
     _1043 = _968;
     _1044 = _969;
   }
-    */
   SV_Target.x = _1042;
   SV_Target.y = _1043;
   SV_Target.z = _1044;

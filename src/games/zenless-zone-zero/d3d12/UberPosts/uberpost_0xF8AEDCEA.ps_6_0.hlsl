@@ -1,7 +1,6 @@
 #include "../../tonemap.hlsl"
 
-// Intro VR Training
-
+// Yixuan Ultimate
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -80,33 +79,28 @@ cbuffer $Globals : register(b0) {
   float4 _FullscreenProjMat[4] : packoffset(c161.x);
   float4 _HDRParams : packoffset(c165.x);
   float4 _PixelCoordToViewDirWS[4] : packoffset(c166.x);
-  float4 _SunDiskColor : packoffset(c170.x);
-  float4 _MoonParams : packoffset(c171.x);
-  float4 _MoonColor : packoffset(c172.x);
-  float4 _MoonGlowColor : packoffset(c173.x);
-  float4 _MoonAndGalaxyDir[4] : packoffset(c174.x);
-  float _SunDiskIntensity : packoffset(c178.x);
-  float _MoonPhaseAlphaBlend : packoffset(c178.y);
-  float _GalaxyIntensity : packoffset(c178.z);
-  float _StarsTwinkSpeed : packoffset(c178.w);
-  float _StarsIntensity : packoffset(c179.x);
-  float4 _MoonGlow2Params : packoffset(c180.x);
-  float3 _HighCloudColor : packoffset(c181.x);
-  float _CloudSwitch : packoffset(c181.w);
-  float4 _CloudParams0 : packoffset(c182.x);
-  float4 _CloudParams1 : packoffset(c183.x);
-  float4 _CloudParams2 : packoffset(c184.x);
-  float4 _CloudParams3 : packoffset(c185.x);
-  float4 _CloudPhaseColorG : packoffset(c186.x);
-  float4 _CloudShadowMoveSpeed : packoffset(c187.x);
-  float4 _CloudLightParams1 : packoffset(c188.x);
-  float4 _CloudLightParams2 : packoffset(c189.x);
-  float4 _GlobalWindDirection : packoffset(c190.x);
-  float _OverrideSkyWeight : packoffset(c191.x);
-  float4 _OverrideSkyBtnColor : packoffset(c192.x);
-  float4 _OverrideSkyTopColor : packoffset(c193.x);
-  float4 _OverrideLowCloudLightColor : packoffset(c194.x);
-  float4 _OverrideLowCloudDarkColor : packoffset(c195.x);
+  float4 _DaySkyParamsPartA[4] : packoffset(c170.x);
+  float4 _NightSkyParamsPartA[4] : packoffset(c174.x);
+  float4 _MoonAndGalaxyDir[4] : packoffset(c178.x);
+  float4 _MoonGlow2Params : packoffset(c182.x);
+  float3 _HighCloudColor : packoffset(c183.x);
+  float _CloudSwitch : packoffset(c183.w);
+  float4 _CloudParams0 : packoffset(c184.x);
+  float4 _CloudParams1 : packoffset(c185.x);
+  float4 _CloudParams2 : packoffset(c186.x);
+  float4 _CloudParams3 : packoffset(c187.x);
+  float4 _CloudPhaseColorG : packoffset(c188.x);
+  float4 _CloudShadowMoveSpeed : packoffset(c189.x);
+  float4 _CloudLightParams1 : packoffset(c190.x);
+  float4 _CloudLightParams2 : packoffset(c191.x);
+  float4 _SkyGridParam : packoffset(c192.x);
+  float3 _SkyGridColor : packoffset(c193.x);
+  float4 _GlobalWindDirection : packoffset(c194.x);
+  float _OverrideSkyWeight : packoffset(c195.x);
+  float4 _OverrideSkyBtnColor : packoffset(c196.x);
+  float4 _OverrideSkyTopColor : packoffset(c197.x);
+  float4 _OverrideLowCloudLightColor : packoffset(c198.x);
+  float4 _OverrideLowCloudDarkColor : packoffset(c199.x);
 };
 
 cbuffer UberPostBaseCBuffer : register(b1) {
@@ -135,16 +129,19 @@ cbuffer UberPostBaseCBuffer : register(b1) {
   float4 UberPostBasePacked4 : packoffset(c022.x);
   float4 UberPostOldCRTPacked : packoffset(c023.x);
   float4 _ChromaCenter : packoffset(c024.x);
-  float4 _VREffectsScanlineParams : packoffset(c025.x);
-  float4 _VREffectsSliceParams : packoffset(c026.x);
-  float4 UberPostGlitchParkedParams1 : packoffset(c027.x);
-  float4 UberPostGlitchParkedParams2 : packoffset(c028.x);
-  float4 GlitchTex1And2Scale : packoffset(c029.x);
-  float4 _CharacterGhostParams : packoffset(c030.x);
-  float4 _SceneWeatherSandstormParams01 : packoffset(c031.x);
-  float4 _SceneWeatherSandstormParams02 : packoffset(c032.x);
-  float4 _SceneWeatherSandstormParams03 : packoffset(c033.x);
-  float4 _SceneWeatherSandstormParams04 : packoffset(c034.x);
+  float4 _ChromaticColorR : packoffset(c025.x);
+  float4 _ChromaticColorG : packoffset(c026.x);
+  float4 _ChromaticColorB : packoffset(c027.x);
+  float4 _VREffectsScanlineParams : packoffset(c028.x);
+  float4 _VREffectsSliceParams : packoffset(c029.x);
+  float4 UberPostGlitchParkedParams1 : packoffset(c030.x);
+  float4 UberPostGlitchParkedParams2 : packoffset(c031.x);
+  float4 GlitchTex1And2Scale : packoffset(c032.x);
+  float4 _CharacterGhostParams : packoffset(c033.x);
+  float4 _SceneWeatherSandstormParams01 : packoffset(c034.x);
+  float4 _SceneWeatherSandstormParams02 : packoffset(c035.x);
+  float4 _SceneWeatherSandstormParams03 : packoffset(c036.x);
+  float4 _SceneWeatherSandstormParams04 : packoffset(c037.x);
 };
 
 cbuffer UberPostFXColorCorrectionCBuffer : register(b2) {
@@ -175,16 +172,16 @@ float4 main(
   float _54;
   float _55;
   float _56;
-  float _241;
-  float _242;
-  float _243;
-  float _253;
-  float _254;
-  float _255;
-  float _256;
+  float _280;
+  float _281;
+  float _282;
+  float _292;
+  float _293;
+  float _294;
   float _295;
-  float _296;
-  float _297;
+  float _334;
+  float _335;
+  float _336;
   float _423;
   float _424;
   float _425;
@@ -225,86 +222,87 @@ float4 main(
   float _87 = exp2(log2(sqrt((_71 * _71) + (_73 * _73)) / _82) * _ChromaCenter.z);
   float _89 = ((_71 * _75) * _82) * _87;
   float _91 = ((_73 * _75) * _82) * _87;
-  float4 _94 = _BlitTex.Sample(s_linear_clamp_sampler, float2((_51 + TEXCOORD.x), (_52 + TEXCOORD.y)));
-  float4 _100 = _BlitTex.Sample(s_linear_clamp_sampler, float2(((_53 + TEXCOORD.x) + _89), ((_54 + TEXCOORD.y) + _91)));
-  float4 _108 = _BlitTex.Sample(s_linear_clamp_sampler, float2(((_55 + TEXCOORD.x) + (_89 * 2.0f)), ((_56 + TEXCOORD.y) + (_91 * 2.0f))));
-  float4 _110 = _BlitTex.Sample(s_linear_clamp_sampler, float2(_49, _50));
-  bool _118 = (UberPostBasePacked3.y > 0.0f);
-  if ((bool)(UberPostBasePacked3.z < 0.5f) && ((bool)((bool)(UberPostBasePacked3.x > 0.0f) || _118))) {
-    float _128 = fmod(((_ScreenSize.y * _50) * _VREffectsScanlineParams.x), 2.0f);
-    float _136 = (((select((_128 > 1.0f), (2.0f - _128), _128) * 2.0f) + -1.0f) * _VREffectsScanlineParams.z) + _49;
-    float _139 = _ScreenSize.w * _ScreenSize.x;
-    float4 _158 = _NapBloomTex.Sample(sampler_NapBloomTex, float2(_136, ((select(((frac((((_136 + abs(_VREffectsSliceParams.y)) * _139) - (_VREffectsSliceParams.y * _50)) / ((_139 * 2.0f) * _VREffectsSliceParams.x)) * 2.0f) <= 1.0f), 0.9999899864196777f, -1.0f) * _VREffectsSliceParams.z) + _50)));
-    float _195 = ((((-0.699999988079071f - _158.x) + (exp2(log2(abs(_158.x)) * 0.3333333432674408f) * 1.4938015937805176f)) * select((_158.x < 0.30000001192092896f), 0.0f, 1.0f)) + _158.x) * UberPostBasePacked3.x;
-    float _196 = ((((-0.699999988079071f - _158.y) + (exp2(log2(abs(_158.y)) * 0.3333333432674408f) * 1.4938015937805176f)) * select((_158.y < 0.30000001192092896f), 0.0f, 1.0f)) + _158.y) * UberPostBasePacked3.x;
-    float _197 = ((((-0.699999988079071f - _158.z) + (exp2(log2(abs(_158.z)) * 0.3333333432674408f) * 1.4938015937805176f)) * select((_158.z < 0.30000001192092896f), 0.0f, 1.0f)) + _158.z) * UberPostBasePacked3.x;
-    float _198 = dot(float3(_94.x, _100.y, _108.z), float3(0.29899999499320984f, 0.5870000123977661f, 0.11400000005960464f));
-    bool _201 = (UberPostBasePacked4.x > 0.5f);
-    float _214 = select(_201, ((((_195 * _198) - _195) * _110.w) + _195), _195);
-    float _215 = select(_201, ((((_196 * _198) - _196) * _110.w) + _196), _196);
-    float _216 = select(_201, ((((_197 * _198) - _197) * _110.w) + _197), _197);
+  float4 _100 = _BlitTex.Sample(s_linear_clamp_sampler, float2(((_51 + TEXCOORD.x) + (_89 * _ChromaticColorR.w)), ((_52 + TEXCOORD.y) + (_91 * _ChromaticColorR.w))));
+  float4 _110 = _BlitTex.Sample(s_linear_clamp_sampler, float2(((_53 + TEXCOORD.x) + (_ChromaticColorG.w * _89)), ((_54 + TEXCOORD.y) + (_ChromaticColorG.w * _91))));
+  float4 _120 = _BlitTex.Sample(s_linear_clamp_sampler, float2(((_55 + TEXCOORD.x) + (_ChromaticColorB.w * _89)), ((_56 + TEXCOORD.y) + (_ChromaticColorB.w * _91))));
+  float _146 = ((_ChromaticColorG.x * _110.y) + (_ChromaticColorR.x * _100.x)) + (_ChromaticColorB.x * _120.z);
+  float _147 = ((_ChromaticColorG.y * _110.y) + (_ChromaticColorR.y * _100.x)) + (_ChromaticColorB.y * _120.z);
+  float _148 = ((_ChromaticColorG.z * _110.y) + (_ChromaticColorR.z * _100.x)) + (_ChromaticColorB.z * _120.z);
+  float4 _149 = _BlitTex.Sample(s_linear_clamp_sampler, float2(_49, _50));
+  bool _157 = (UberPostBasePacked3.y > 0.0f);
+  if ((bool)(UberPostBasePacked3.z < 0.5f) && ((bool)((bool)(UberPostBasePacked3.x > 0.0f) || _157))) {
+    float _167 = fmod(((_ScreenSize.y * _50) * _VREffectsScanlineParams.x), 2.0f);
+    float _175 = (((select((_167 > 1.0f), (2.0f - _167), _167) * 2.0f) + -1.0f) * _VREffectsScanlineParams.z) + _49;
+    float _178 = _ScreenSize.w * _ScreenSize.x;
+    float4 _197 = _NapBloomTex.Sample(sampler_NapBloomTex, float2(_175, ((select(((frac((((_175 + abs(_VREffectsSliceParams.y)) * _178) - (_VREffectsSliceParams.y * _50)) / ((_178 * 2.0f) * _VREffectsSliceParams.x)) * 2.0f) <= 1.0f), 0.9999899864196777f, -1.0f) * _VREffectsSliceParams.z) + _50)));
+    float _234 = ((((-0.699999988079071f - _197.x) + (exp2(log2(abs(_197.x)) * 0.3333333432674408f) * 1.4938015937805176f)) * select((_197.x < 0.30000001192092896f), 0.0f, 1.0f)) + _197.x) * UberPostBasePacked3.x;
+    float _235 = ((((-0.699999988079071f - _197.y) + (exp2(log2(abs(_197.y)) * 0.3333333432674408f) * 1.4938015937805176f)) * select((_197.y < 0.30000001192092896f), 0.0f, 1.0f)) + _197.y) * UberPostBasePacked3.x;
+    float _236 = ((((-0.699999988079071f - _197.z) + (exp2(log2(abs(_197.z)) * 0.3333333432674408f) * 1.4938015937805176f)) * select((_197.z < 0.30000001192092896f), 0.0f, 1.0f)) + _197.z) * UberPostBasePacked3.x;
+    float _237 = dot(float3(_146, _147, _148), float3(0.29899999499320984f, 0.5870000123977661f, 0.11400000005960464f));
+    bool _240 = (UberPostBasePacked4.x > 0.5f);
+    float _253 = select(_240, ((((_234 * _237) - _234) * _149.w) + _234), _234);
+    float _254 = select(_240, ((((_235 * _237) - _235) * _149.w) + _235), _235);
+    float _255 = select(_240, ((((_236 * _237) - _236) * _149.w) + _236), _236);
     do {
-      if (_118) {
-        float4 _227 = _DirtTex.Sample(s_linear_clamp_sampler, float2(((_DirtTexTillingOffset.x * _49) + _DirtTexTillingOffset.z), ((_DirtTexTillingOffset.y * _50) + _DirtTexTillingOffset.w)));
-        _241 = (((_227.x * _195) * UberPostBasePacked3.y) + _214);
-        _242 = (((_227.y * _196) * UberPostBasePacked3.y) + _215);
-        _243 = (((_227.z * _197) * UberPostBasePacked3.y) + _216);
+      if (_157) {
+        float4 _266 = _DirtTex.Sample(s_linear_clamp_sampler, float2(((_DirtTexTillingOffset.x * _49) + _DirtTexTillingOffset.z), ((_DirtTexTillingOffset.y * _50) + _DirtTexTillingOffset.w)));
+        _280 = (((_266.x * _234) * UberPostBasePacked3.y) + _253);
+        _281 = (((_266.y * _235) * UberPostBasePacked3.y) + _254);
+        _282 = (((_266.z * _236) * UberPostBasePacked3.y) + _255);
       } else {
-        _241 = _214;
-        _242 = _215;
-        _243 = _216;
+        _280 = _253;
+        _281 = _254;
+        _282 = _255;
       }
-      _253 = (_241 + _94.x);
-      _254 = (_242 + _100.y);
-      _255 = (_243 + _108.z);
-      _256 = saturate((((_242 + _241) + _243) * 0.33329999446868896f) + _110.w);
+      _292 = (_280 + _146);
+      _293 = (_281 + _147);
+      _294 = (_282 + _148);
+      _295 = saturate((((_281 + _280) + _282) * 0.33329999446868896f) + _149.w);
     } while (false);
   } else {
-    _253 = _94.x;
-    _254 = _100.y;
-    _255 = _108.z;
-    _256 = _110.w;
+    _292 = _146;
+    _293 = _147;
+    _294 = _148;
+    _295 = _149.w;
   }
   [branch]
   if (_Vignette_Params2.z > 0.0f) {
-    float _273 = abs(_50 - _Vignette_Params2.y) * _Vignette_Params2.z;
-    float _275 = (_Vignette_Params2.z * _Vignette_Params1.w) * abs(_49 - _Vignette_Params2.x);
-    float _281 = exp2(log2(saturate(1.0f - dot(float2(_275, _273), float2(_275, _273)))) * _Vignette_Params2.w);
-    _295 = (((_281 * (1.0f - _Vignette_Params1.x)) + _Vignette_Params1.x) * _253);
-    _296 = (((_281 * (1.0f - _Vignette_Params1.y)) + _Vignette_Params1.y) * _254);
-    _297 = (((_281 * (1.0f - _Vignette_Params1.z)) + _Vignette_Params1.z) * _255);
+    float _312 = abs(_50 - _Vignette_Params2.y) * _Vignette_Params2.z;
+    float _314 = (_Vignette_Params2.z * _Vignette_Params1.w) * abs(_49 - _Vignette_Params2.x);
+    float _320 = exp2(log2(saturate(1.0f - dot(float2(_314, _312), float2(_314, _312)))) * _Vignette_Params2.w);
+    _334 = (((_320 * (1.0f - _Vignette_Params1.x)) + _Vignette_Params1.x) * _292);
+    _335 = (((_320 * (1.0f - _Vignette_Params1.y)) + _Vignette_Params1.y) * _293);
+    _336 = (((_320 * (1.0f - _Vignette_Params1.z)) + _Vignette_Params1.z) * _294);
   } else {
-    _295 = _253;
-    _296 = _254;
-    _297 = _255;
+    _334 = _292;
+    _335 = _293;
+    _336 = _294;
   }
-  float3 untonemapped = (float3(_295, _296, _297));
+  float3 untonemapped = (float3(_334, _335, _336));
+  renodx::lut::Config lut_config = renodx::lut::config::Create(
+      s_linear_clamp_sampler,
+      1.f,
+      0.f,
+      renodx::lut::config::type::ARRI_C1000_NO_CUT,
+      renodx::lut::config::type::LINEAR,
+      _Lut_Params.xyz);
 
-  float3 tonemapped = applyUserToneMap(untonemapped, _Lut_Params, _InternalLut, s_linear_clamp_sampler);
-
+  float3 tonemapped = renodx::lut::Sample(_InternalLut, lut_config, untonemapped);
   float _385 = tonemapped.x;
   float _386 = tonemapped.y;
   float _387 = tonemapped.z;
-  // Internal LUT
   /*
-  float _302 = saturate(_295);
-  float _303 = saturate(_296);
-  float _304 = saturate(_297);
-  float _332 = select((_304 <= 0.0031308000907301903f), (_304 * 12.920000076293945f), ((exp2(log2(abs(_304)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f)) * _Lut_Params.z;
-  float _333 = floor(_332);
-  float _339 = ((select((_303 <= 0.0031308000907301903f), (_303 * 12.920000076293945f), ((exp2(log2(abs(_303)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f)) * _Lut_Params.z) + 0.5f) * _Lut_Params.y;
-  float _341 = (((select((_302 <= 0.0031308000907301903f), (_302 * 12.920000076293945f), ((exp2(log2(abs(_302)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f)) * _Lut_Params.z) + 0.5f) * _Lut_Params.x) + (_333 * _Lut_Params.y);
-  float _342 = _332 - _333;
-  float4 _344 = _InternalLut.SampleLevel(s_linear_clamp_sampler, float2((_341 + _Lut_Params.y), _339), 0.0f);
-  float4 _348 = _InternalLut.SampleLevel(s_linear_clamp_sampler, float2(_341, _339), 0.0f);
-  float _358 = ((_344.x - _348.x) * _342) + _348.x;
-  float _359 = ((_344.y - _348.y) * _342) + _348.y;
-  float _360 = ((_344.z - _348.z) * _342) + _348.z;
-  float _385 = select((_358 <= 0.040449999272823334f), (_358 * 0.07739938050508499f), exp2(log2(abs((_358 + 0.054999999701976776f) * 0.9478673338890076f)) * 2.4000000953674316f));
-  float _386 = select((_359 <= 0.040449999272823334f), (_359 * 0.07739938050508499f), exp2(log2(abs((_359 + 0.054999999701976776f) * 0.9478673338890076f)) * 2.4000000953674316f));
-  float _387 = select((_360 <= 0.040449999272823334f), (_360 * 0.07739938050508499f), exp2(log2(abs((_360 + 0.054999999701976776f) * 0.9478673338890076f)) * 2.4000000953674316f));
+  float _359 = saturate((log2((_336 * 5.555555820465088f) + 0.047995999455451965f) * 0.07349978387355804f) + 0.3860360085964203f) * _Lut_Params.z;
+  float _360 = floor(_359);
+  float _366 = ((saturate((log2((_335 * 5.555555820465088f) + 0.047995999455451965f) * 0.07349978387355804f) + 0.3860360085964203f) * _Lut_Params.z) + 0.5f) * _Lut_Params.y;
+  float _368 = (_360 * _Lut_Params.y) + (((saturate((log2((_334 * 5.555555820465088f) + 0.047995999455451965f) * 0.07349978387355804f) + 0.3860360085964203f) * _Lut_Params.z) + 0.5f) * _Lut_Params.x);
+  float _369 = _359 - _360;
+  float4 _371 = _InternalLut.SampleLevel(s_linear_clamp_sampler, float2((_368 + _Lut_Params.y), _366), 0.0f);
+  float4 _375 = _InternalLut.SampleLevel(s_linear_clamp_sampler, float2(_368, _366), 0.0f);
+  float _385 = ((_371.x - _375.x) * _369) + _375.x;
+  float _386 = ((_371.y - _375.y) * _369) + _375.y;
+  float _387 = ((_371.z - _375.z) * _369) + _375.z;
   */
-
   if (UberPostBasePacked1.x > 0.0f) {
     float4 _402 = _Grain_Texture.Sample(s_linear_repeat_sampler, float2(((_Grain_TilingParams.x * TEXCOORD.x) + _Grain_TilingParams.z), ((_Grain_TilingParams.y * TEXCOORD.y) + _Grain_TilingParams.w)));
     float _405 = (_402.w + -0.5f) * 2.0f;
@@ -317,6 +315,7 @@ float4 main(
     _424 = _386;
     _425 = _387;
   }
+
   float _430 = ((_424 + _423) + _425) * 0.3333333432674408f;
   float _437 = ((_423 - _430) * UberPostColorCorrectionPacked0.w) + _430;
   float _438 = ((_424 - _430) * UberPostColorCorrectionPacked0.w) + _430;
@@ -325,28 +324,10 @@ float4 main(
   float _455 = (((1.0f - saturate(_438)) - _438) * UberPostColorCorrectionPacked1.w) + _438;
   float _456 = (((1.0f - saturate(_439)) - _439) * UberPostColorCorrectionPacked1.w) + _439;
   float _464 = saturate((saturate(dot(float3(_454, _455, _456), float3(0.2126729041337967f, 0.7151522040367126f, 0.07217500358819962f))) - UberPostColorCorrectionPacked2.y) * UberPostColorCorrectionPacked2.z);
-  float _490 = (((UberPostColorCorrectionPacked0.x - _454) + ((UberPostColorCorrectionPacked1.x - UberPostColorCorrectionPacked0.x) * _464)) * UberPostColorCorrectionPacked2.x) + _454;
-  float _491 = (((UberPostColorCorrectionPacked0.y - _455) + ((UberPostColorCorrectionPacked1.y - UberPostColorCorrectionPacked0.y) * _464)) * UberPostColorCorrectionPacked2.x) + _455;
-  float _492 = (((UberPostColorCorrectionPacked0.z - _456) + ((UberPostColorCorrectionPacked1.z - UberPostColorCorrectionPacked0.z) * _464)) * UberPostColorCorrectionPacked2.x) + _456;
-  // HDR FX Mask Blend
-  float3 result = float3(_490, _491, _492);
-  if (UberPostColorCorrectionPacked2.w > 0.5f) {
-    float m = smoothstep(0.0f, 1.0f, _FXMaskForScene.Sample(s_linear_clamp_sampler, TEXCOORD).x);
-
-    if (UberPostColorCorrectionPacked3.w < 0.5f) {
-      // Simple lighten
-      float3 blend_factor = pow(m, 2.2f);
-      result = result * (1.0f + blend_factor * 0.5f);
-    } else {
-      // Overlay
-      float3 blend = UberPostColorCorrectionPacked3.xyz;
-      result = result * lerp(1.0f, blend * 2.0f, m);
-    }
-  }
-  _565 = result.x;
-  _566 = result.y;
-  _567 = result.z;
-  // FX Mask Original
+  float _490 = ((((UberPostColorCorrectionPacked0.x - _454) + ((UberPostColorCorrectionPacked1.x - UberPostColorCorrectionPacked0.x) * _464)) * UberPostColorCorrectionPacked2.x) + _454);
+  float _491 = ((((UberPostColorCorrectionPacked0.y - _455) + ((UberPostColorCorrectionPacked1.y - UberPostColorCorrectionPacked0.y) * _464)) * UberPostColorCorrectionPacked2.x) + _455);
+  float _492 = ((((UberPostColorCorrectionPacked0.z - _456) + ((UberPostColorCorrectionPacked1.z - UberPostColorCorrectionPacked0.z) * _464)) * UberPostColorCorrectionPacked2.x) + _456);
+  // Original FX Mask
   /*
   if (UberPostColorCorrectionPacked2.w > 0.5f) {
     float4 _496 = _FXMaskForScene.Sample(s_linear_clamp_sampler, float2(TEXCOORD.x, TEXCOORD.y));
@@ -368,11 +349,29 @@ float4 main(
     _566 = _491;
     _567 = _492;
   }
-  */
+    */
+  // HDR FX Mask Blend
+  float3 result = float3(_490, _491, _492);
+  if (UberPostColorCorrectionPacked2.w > 0.5f) {
+    float m = smoothstep(0.0f, 1.0f, _FXMaskForScene.Sample(s_linear_clamp_sampler, TEXCOORD).x);
+
+    if (UberPostColorCorrectionPacked3.w < 0.5f) {
+      // Simple lighten
+      float3 blend_factor = pow(m, 2.2f);
+      result = result * (1.0f + blend_factor * 0.5f);
+    } else {
+      // Overlay
+      float3 blend = UberPostColorCorrectionPacked3.xyz;
+      result = result * lerp(1.0f, blend * 2.0f, m);
+    }
+  }
+  _565 = result.x;
+  _566 = result.y;
+  _567 = result.z;
   SV_Target.x = _565;
   SV_Target.y = _566;
   SV_Target.z = _567;
-  SV_Target.w = _256;
+  SV_Target.w = _295;
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
   return SV_Target;
 }
