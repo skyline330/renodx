@@ -27,6 +27,12 @@ struct ShaderInjectData {
   float colorGradeLUTScaling;
 
   float fxBloomIntensity;
+  float fxFSRUpscaling;
+  float fxRCASSharpening;
+  float fxRCASAmount;
+
+  float toneMapVideoNits;
+  float toneMapHdrVideo;
 
   float swapchainCustomColorSpace;
   float swapchainClampColorSpace;
@@ -59,6 +65,8 @@ cbuffer injected_buffer : register(b13) {
 #define RENODX_TONE_MAP_HIGHLIGHT_SATURATION   injectedData.colorGradeHighlightSaturation
 #define RENODX_TONE_MAP_BLOWOUT                injectedData.colorGradeBlowout
 #define RENODX_TONE_MAP_FLARE                  injectedData.colorGradeFlare
+#define RENODX_VIDEO_NITS                      injectedData.toneMapVideoNits
+#define RENODX_TONE_MAP_HDR_VIDEO              injectedData.toneMapHdrVideo
 #define RENODX_INTERMEDIATE_ENCODING           renodx::draw::ENCODING_NONE
 #define RENODX_SWAP_CHAIN_GAMMA_CORRECTION     RENODX_GAMMA_CORRECTION
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE   injectedData.swapchainCustomColorSpace
