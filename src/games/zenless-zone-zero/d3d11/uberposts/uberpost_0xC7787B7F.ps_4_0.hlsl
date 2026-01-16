@@ -1,4 +1,4 @@
-#include "../../shared.h"
+#include "../../tonemap.hlsl"
 
 // Uberpost - version 2.5 - Blazewood Afternoon
 
@@ -330,6 +330,11 @@ void main(
   }
 
   float3 untonemapped = r2.xyz;
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, v1.xy, t0, s0_s);
+  }
+
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s0_s,
       1.f,
@@ -372,7 +377,13 @@ void main(
   }
   // o0.xyz = saturate(r1.xyz);
 
-  o0.xyz = renodx::draw::RenderIntermediatePass(r1.xyz);
+  o0.xyz = r1.xyz;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    o0.xyz = applyFilmGrain(o0.xyz, v1.xy);
+  }
+
+  o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
   return;
 }

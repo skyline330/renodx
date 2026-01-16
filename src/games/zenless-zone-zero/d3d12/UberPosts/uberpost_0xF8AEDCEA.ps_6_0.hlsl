@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // Yixuan Ultimate
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -278,7 +279,13 @@ float4 main(
     _335 = _293;
     _336 = _294;
   }
+
   float3 untonemapped = (float3(_334, _335, _336));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
+
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s_linear_clamp_sampler,
       1.f,
@@ -372,6 +379,12 @@ float4 main(
   SV_Target.y = _566;
   SV_Target.z = _567;
   SV_Target.w = _295;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

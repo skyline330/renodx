@@ -1,5 +1,6 @@
-// Yixuan sprint - VR Training
 #include "../../tonemap.hlsl"
+
+// Yixuan sprint - VR Training
 
 Texture2D<float4> _BlitTex : register(t0);
 
@@ -357,8 +358,12 @@ float4 main(
     _483 = _441;
     _484 = _442;
   }
-  
+
   float3 untonemapped = (float3(_482, _483, _484));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
 
   float3 tonemapped = applyUserToneMap(untonemapped, _Lut_Params, _InternalLut, s_linear_clamp_sampler);
 
@@ -488,6 +493,12 @@ float4 main(
   SV_Target.y = (_1013);
   SV_Target.z = (_1014);
   SV_Target.w = _443;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

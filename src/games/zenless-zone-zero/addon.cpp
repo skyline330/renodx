@@ -18,6 +18,7 @@
 #include "../../mods/swapchain.hpp"
 #include "../../utils/settings.hpp"
 #include "./shared.h"
+#include "../../utils/random.hpp"
 
 namespace {
 
@@ -232,38 +233,27 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .parse = [](float value) { return value * 0.01f; },
     },
-    new renodx::utils::settings::Setting{
-        .key = "fxFSRUpscaling",
-        .binding = &shader_injection.fxFSRUpscaling,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
-        .label = "FSR 1.0 Upscaling (EASU)",
-        .section = "Effects",
-        .tooltip = "Enable FSR 1.0 Edge Adaptive Spatial Upsampling."
-                   "\nProvides better quality when upscaling from lower resolutions.",
-        .labels = {"Off", "On"},
-    },
-    new renodx::utils::settings::Setting{
-        .key = "fxRCASSharpening",
-        .binding = &shader_injection.fxRCASSharpening,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
-        .label = "FSR RCAS Sharpening",
-        .section = "Effects",
-        .tooltip = "Enable Robust Contrast Adaptive Sharpening."
-                   "\nCan be used independently of FSR upscaling.",
-        .labels = {"Off", "On"},
-    },
         new renodx::utils::settings::Setting{
         .key = "fxRCASAmount",
         .binding = &shader_injection.fxRCASAmount,
         .default_value = 50.f,
         .label = "RCAS Sharpening Amount",
         .section = "Effects",
-        .tooltip = "Adjusts RCAS sharpening strength.",
+        .tooltip = "Adjusts RCAS sharpening strength."
+                   "\n0 = Disabled",
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.fxRCASSharpening >= 1.f; },
-        .parse = [](float value) { return value * 0.01f; },
+        .parse = [](float value) { return value == 0 ? 0.f : exp2(-(1.f - (value * 0.01f))); },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "fxFilmGrainAmount",
+        .binding = &shader_injection.fxFilmGrainAmount,
+        .default_value = 0.f,
+        .label = "Film Grain",
+        .section = "Effects",
+        .tooltip = "Adjusts perceptual film grain strength."
+                   "\n0 = Disabled",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
     },
     new renodx::utils::settings::Setting{
         .key = "VideoAutoHDR",
@@ -272,18 +262,18 @@ renodx::utils::settings::Settings settings = {
         .default_value = 1.f,
         .label = "Video AutoHDR",
         .section = "Effects",
-        .tooltip = "Upgrades SDR videos to HDR.",
+        .tooltip = "Upgrades SDR videos to HDR using inverse tonemapping.",
     },
     new renodx::utils::settings::Setting{
         .key = "ToneMapVideoNits",
         .binding = &shader_injection.toneMapVideoNits,
-        .default_value = 500.f,
-        .can_reset = false,
+        .default_value = 400.f,
         .label = "Video Peak Brightness",
         .section = "Effects",
-        .tooltip = "Sets the peak brightness for video content in nits",
+        .tooltip = "Sets the peak brightness for video content in nits."
+                   "\nNot recommended to exceed 600 nits.",
         .min = 48.f,
-        .max = 4000.f,
+        .max = 1000.f,
     },
     new renodx::utils::settings::Setting{
         .key = "swapchainCustomColorSpace",
@@ -297,7 +287,7 @@ renodx::utils::settings::Settings settings = {
                    "\nJPN Modern for BT.709 D93."
                    "\nUS CRT for BT.601 (NTSC-U)."
                    "\nJPN CRT for BT.601 ARIB-TR-B9 D93 (NTSC-J)."
-                   "\nDefault: US CRT",
+                   "\nDefault: US Modern",
         .labels = {
             "US Modern",
             "JPN Modern",
@@ -317,15 +307,30 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.toneMapType >= 1; },
         .parse = [](float value) { return value - 1.f; },
     },
+        new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Reset All",
+        .section = "Presets",
+        .group = "button-line-1",
+        .on_change = []() {
+          for (auto setting : settings) {
+            if (setting->key.empty()) continue;
+            if (!setting->can_reset) continue;
+            renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
+          }
+        },
+    },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
         .label = "HDR Look",
         .section = "Presets",
+        .group = "button-line-1",
         .on_change = OnPresetHdrLook,
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "RenoDX by ShortFuse, game mod by Maple.",
+        .label = "RenoDX by ShortFuse, game mod by Maple."
+                 "\nMaintained by Spiwar and Nick.",
         .section = "About",
     },
     new renodx::utils::settings::Setting{
@@ -346,7 +351,7 @@ renodx::utils::settings::Settings settings = {
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-        .label = "Github",
+        .label = "GitHub",
         .section = "About",
         .group = "button-line-1",
         .on_change = []() {
@@ -397,6 +402,19 @@ void OnInitDevice(reshade::api::device* device) {
   }
 }
 
+bool fired_on_init_swapchain = false;
+
+void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
+  if (fired_on_init_swapchain) return;
+  fired_on_init_swapchain = true;
+
+  auto peak = renodx::utils::swapchain::GetPeakNits(swapchain);
+  if (!peak.has_value()) {
+    peak = 1000.f;
+  }
+  settings[1]->default_value = peak.value();
+}
+
 }  // namespace
 
 extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
@@ -406,6 +424,8 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH: {
       if (!reshade::register_addon(h_module)) return FALSE;
+
+      renodx::utils::random::binds.push_back(&shader_injection.custom_random);
 
       // Check if we're a raytracing pipeline using NvAPI SER, it follows this layout:
       // [0] | TBL | 1885845696336 | TUAV, array_size: 1, binding: 0, count: 1, register: 0, space: 2, visibility: all
@@ -488,6 +508,10 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       }
 
       reshade::register_event<reshade::addon_event::init_device>(OnInitDevice);
+      
+      // peak nits
+      reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
+      
       break;
     }
     case DLL_PROCESS_DETACH:
@@ -499,6 +523,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   renodx::utils::settings::Use(fdw_reason, &settings, &OnPresetOff);
   renodx::mods::swapchain::Use(fdw_reason, &shader_injection);
   renodx::mods::shader::Use(fdw_reason, custom_shaders, &shader_injection);
+  renodx::utils::random::Use(fdw_reason);
 
   return TRUE;
 }

@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // was given to me no idea what the fuck this is 
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -268,7 +269,13 @@ float4 main(
     _263 = _221;
     _264 = _222;
   }
+  
   float3 untonemapped = (float3(_262, _263, _264));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
+
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s_linear_clamp_sampler,
       1.f,
@@ -309,6 +316,12 @@ float4 main(
   SV_Target.y = (_352);
   SV_Target.z = (_353);
   SV_Target.w = _223;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

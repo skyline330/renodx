@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // Menu screen for Nicole, Anby
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -353,7 +354,12 @@ float4 main(
     _414 = _372;
     _415 = _373;
   }
+
   float3 untonemapped = (float3(_413, _414, _415));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
 
   float3 tonemapped = renodx::draw::ToneMapPass(untonemapped);
 
@@ -465,6 +471,12 @@ float4 main(
   SV_Target.y = _847;
   SV_Target.z = _848;
   SV_Target.w = _374;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

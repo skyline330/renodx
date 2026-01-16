@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // Zhao Sprint
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -359,6 +360,11 @@ float4 main(
   }
 
   float3 untonemapped = (float3(_482, _483, _484));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
+
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s_linear_clamp_sampler,
       1.f,
@@ -484,7 +490,16 @@ float4 main(
       }
     }
   }
-  SV_Target.xyz = renodx::draw::RenderIntermediatePass(float3(_973, _974, _975));
+  SV_Target.x = _973;
+  SV_Target.y = _974;
+  SV_Target.z = _975;
   SV_Target.w = _443;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
+  SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

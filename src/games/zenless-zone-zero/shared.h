@@ -27,9 +27,9 @@ struct ShaderInjectData {
   float colorGradeLUTScaling;
 
   float fxBloomIntensity;
-  float fxFSRUpscaling;
-  float fxRCASSharpening;
   float fxRCASAmount;
+  float fxFilmGrainAmount;
+  float custom_random;
 
   float toneMapVideoNits;
   float toneMapHdrVideo;
@@ -74,6 +74,9 @@ cbuffer injected_buffer : register(b13) {
 #define RENODX_SWAP_CHAIN_ENCODING             injectedData.swapchainEncoding
 #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE injectedData.swapchainEncodingColorSpace
 #define RENODX_RENO_DRT_TONE_MAP_METHOD        renodx::tonemap::renodrt::config::tone_map_method::REINHARD
+
+#define CUSTOM_GRAIN_STRENGTH                  injectedData.fxFilmGrainAmount
+#define CUSTOM_RANDOM                          injectedData.custom_random
 
 #include "../../shaders/renodx.hlsl"
 #endif

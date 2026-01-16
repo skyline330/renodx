@@ -500,7 +500,13 @@ float4 main(
     _974 = _932;
     _975 = _933;
   }
+  
   float3 untonemapped = (float3(_973, _974, _975));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
+
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s_linear_clamp_sampler,
       1.f,
@@ -541,5 +547,12 @@ float4 main(
   SV_Target.y = (_1063);
   SV_Target.z = (_1064);
   SV_Target.w = _934;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
+  SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

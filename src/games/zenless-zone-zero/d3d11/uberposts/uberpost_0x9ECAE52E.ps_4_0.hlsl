@@ -1,4 +1,4 @@
-#include "../../shared.h"
+#include "../../tonemap.hlsl"
 
 // Uberpost - version 2.5 - Display Stand
 
@@ -249,6 +249,11 @@ void main(
   }
 
   float3 untonemapped = r1.xyz;
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, v1.xy, t0, s0_s);
+  }
+
   r1.xyz = renodx::draw::ToneMapPass(untonemapped);
 
   r0.x = cmp(0 < cb1[13].x);
@@ -266,7 +271,13 @@ void main(
   }
   // o0.xyz = saturate(r1.xyz);
 
-  o0.xyz = renodx::draw::RenderIntermediatePass(r1.xyz);
+  o0.xyz = r1.xyz;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    o0.xyz = applyFilmGrain(o0.xyz, v1.xy);
+  }
+
+  o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
   return;
 }

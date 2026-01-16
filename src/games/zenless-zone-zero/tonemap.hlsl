@@ -2,14 +2,16 @@
 
 static inline float3 AutoHDRVideo(float3 sdr_video) {
   if (RENODX_TONE_MAP_TYPE == 0.f || RENODX_TONE_MAP_HDR_VIDEO == 0.f) {
-    return sdr_video;
+    return renodx::color::srgb::DecodeSafe(sdr_video);
   }
   renodx::draw::Config config = renodx::draw::BuildConfig();
   config.peak_white_nits = RENODX_VIDEO_NITS;
 
-  float3 hdr_video = renodx::draw::UpscaleVideoPass(saturate(sdr_video), config);
+  float3 hdr_video = renodx::color::correct::GammaSafe(sdr_video);
+  hdr_video = renodx::draw::UpscaleVideoPass(saturate(hdr_video), config);
   hdr_video = renodx::color::srgb::DecodeSafe(hdr_video);
-  return renodx::draw::RenderIntermediatePass(hdr_video);
+  hdr_video = renodx::draw::RenderIntermediatePass(hdr_video);
+  return hdr_video = max(0, hdr_video); // bt709 clamp
 }
 
 float3 applyUserToneMap(float3 color, float4 lutParams, Texture2D<float4> lutTexture, SamplerState lutSampler) {
@@ -32,4 +34,122 @@ float3 applyUserToneMap(float3 color, float4 lutParams, Texture2D<float4> lutTex
       lutTexture);
 
   return renodx::draw::ToneMapPass(outputColor, gradedColor);
+}
+
+// From Lilium
+// RCAS - Robust Contrast Adaptive Sharpening
+float3 ApplyRCAS(
+    float3 center_color, float2 tex_coord,
+    Texture2D<float4> SamplerFrameBuffer_TEX, SamplerState SamplerFrameBuffer_SMP_s) {
+  if (injectedData.fxRCASAmount == 0.f) return center_color;  // Skip sharpening if amount is zero
+
+#define ENABLE_NOISE_REMOVAL           1u  // Always good to be enabled
+#define ENABLE_NORMALIZATION           1u
+#define SHARPENING_NORMALIZATION_POINT 125
+
+  uint width, height;
+  SamplerFrameBuffer_TEX.GetDimensions(width, height);
+  float2 texel_size = 1.0 / float2(width, height);
+
+  // Algorithm uses minimal 3x3 pixel neighborhood.
+  //    b
+  //  d e f
+  //    h
+  float3 b =
+      SamplerFrameBuffer_TEX.SampleLevel(SamplerFrameBuffer_SMP_s, tex_coord + float2(0, -1) * texel_size, 0).rgb;
+  float3 d =
+      SamplerFrameBuffer_TEX.SampleLevel(SamplerFrameBuffer_SMP_s, tex_coord + float2(-1, 0) * texel_size, 0).rgb;
+  float3 e =
+      center_color;
+  float3 f =
+      SamplerFrameBuffer_TEX.SampleLevel(SamplerFrameBuffer_SMP_s, tex_coord + float2(1, 0) * texel_size, 0).rgb;
+  float3 h =
+      SamplerFrameBuffer_TEX.SampleLevel(SamplerFrameBuffer_SMP_s, tex_coord + float2(0, 1) * texel_size, 0).rgb;
+
+#if ENABLE_NORMALIZATION
+  b /= SHARPENING_NORMALIZATION_POINT;
+  d /= SHARPENING_NORMALIZATION_POINT;
+  e /= SHARPENING_NORMALIZATION_POINT;
+  f /= SHARPENING_NORMALIZATION_POINT;
+  h /= SHARPENING_NORMALIZATION_POINT;
+#endif
+
+  // Immediate constants for peak range.
+  static const float2 peakC = float2(1.f, -4.f);
+
+  // Calculate luminance of center and neighbors
+  float bLum = renodx::color::y::from::BT709(b);
+  float dLum = renodx::color::y::from::BT709(d);
+  float eLum = renodx::color::y::from::BT709(e);
+  float fLum = renodx::color::y::from::BT709(f);
+  float hLum = renodx::color::y::from::BT709(h);
+
+  // Min and max of ring.
+  float min4Lum = renodx::math::Min(bLum, dLum, fLum, hLum);
+  float max4Lum = renodx::math::Max(bLum, dLum, fLum, hLum);
+
+  // 0.99 found through testing -> see my latest desmos or https://www.desmos.com/calculator/4dyqhishpl
+  // this helps reducing massive overshoot that would happen otherwise
+  // normal CAS applies a limiter too so that there is no overshoot
+  float limited_max4Lum = min(max4Lum, 0.99f);
+
+  float hitMinLum = min4Lum
+                    * rcp(4.f * limited_max4Lum);
+
+  float hitMaxLum = (peakC.x - limited_max4Lum)
+                    * rcp(4.f * min4Lum + peakC.y);
+
+  float localLobe = max(-hitMinLum, hitMaxLum);
+
+// This is set at the limit of providing unnatural results for sharpening.
+// 0.25f - (1.f / 16.f)
+#define FSR_RCAS_LIMIT 0.1875f
+
+  float lobe = max(float(-FSR_RCAS_LIMIT),
+                   min(localLobe, 0.f))
+               * injectedData.fxRCASAmount;
+
+#if ENABLE_NOISE_REMOVAL
+  float bLuma2x = bLum * 2.f;
+  float dLuma2x = dLum * 2.f;
+  float eLuma2x = eLum * 2.f;
+  float fLuma2x = fLum * 2.f;
+  float hLuma2x = hLum * 2.f;
+  // Noise detection.
+  float nz = 0.25f * bLuma2x
+             + 0.25f * dLuma2x
+             + 0.25f * fLuma2x
+             + 0.25f * hLuma2x
+             - eLuma2x;
+
+  float maxLuma2x = renodx::math::Max(renodx::math::Max(bLuma2x, dLuma2x, eLuma2x), fLuma2x, hLuma2x);
+  float minLuma2x = renodx::math::Min(renodx::math::Min(bLuma2x, dLuma2x, eLuma2x), fLuma2x, hLuma2x);
+
+  nz = saturate(abs(nz) * rcp(maxLuma2x - minLuma2x));
+  nz = -0.5f * nz + 1.f;
+
+  lobe *= nz;
+#endif
+
+  // Resolve, which needs the medium precision rcp approximation to avoid visible tonality changes.
+  float rcpL = rcp(4.f * lobe + 1.f);
+
+  float pixLum = ((bLum + dLum + hLum + fLum) * lobe + eLum) * rcpL;
+  float3 pix = clamp((pixLum / eLum), 0.f, 4.f) * e;
+
+#if ENABLE_NORMALIZATION
+  pix *= SHARPENING_NORMALIZATION_POINT;
+#endif
+
+  return pix;
+}
+
+float3 applyFilmGrain(float3 outputColor, float2 screen) {
+  float3 grainedColor = renodx::effects::ApplyFilmGrain(
+      outputColor,
+      screen,
+      CUSTOM_RANDOM,
+      injectedData.fxFilmGrainAmount * 0.03f,
+      1.f);
+  return grainedColor;
 }

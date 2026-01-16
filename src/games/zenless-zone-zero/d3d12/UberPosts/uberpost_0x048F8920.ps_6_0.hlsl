@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // YSG 2nd Ult 
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -380,7 +381,13 @@ float4 main(
     _446 = _404;
     _447 = _405;
   }
+  
   float3 untonemapped = (float3(_445, _446, _447));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
+
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s_linear_clamp_sampler,
       1.f,
@@ -421,6 +428,12 @@ float4 main(
   SV_Target.y = (_535);
   SV_Target.z = (_536);
   SV_Target.w = _406;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

@@ -287,6 +287,11 @@ void main(
   }
 
   float3 untonemapped = r2.yzx;
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, v1.xy, t0, s0_s);
+  }
+
   r2.xyz = applyUserToneMap(untonemapped, cb1[0], t2, s0_s);
 
   /*
@@ -482,7 +487,13 @@ void main(
   r1.xyz = r4.zzz ? r3.xyz : r1.xyz;
   // o0.xyz = saturate(r4.yyy ? r0.yzw : r1.xyz);
 
-  o0.xyz = renodx::draw::RenderIntermediatePass(r4.yyy ? r0.yzw : r1.xyz);
+  o0.xyz = (r4.yyy ? r0.yzw : r1.xyz);
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    o0.xyz = applyFilmGrain(o0.xyz, v1.xy);
+  }
+
+  o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
   return;
 }

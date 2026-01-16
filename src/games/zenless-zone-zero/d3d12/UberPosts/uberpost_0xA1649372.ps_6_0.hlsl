@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // Trigger aftershock - VR 
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -374,8 +375,12 @@ float4 main(
     _513 = _471;
     _514 = _472;
   }
-  
+
   float3 untonemapped = (float3(_512, _513, _514));
+
+  if (injectedData.fxRCASAmount > 0.0f) {
+    untonemapped = ApplyRCAS(untonemapped, TEXCOORD, _BlitTex, s_linear_clamp_sampler);
+  }
 
   float3 tonemapped = applyUserToneMap(untonemapped, _Lut_Params, _InternalLut, s_linear_clamp_sampler);
 
@@ -417,6 +422,12 @@ float4 main(
   SV_Target.y = (_641);
   SV_Target.z = (_642);
   SV_Target.w = _473;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
   SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }

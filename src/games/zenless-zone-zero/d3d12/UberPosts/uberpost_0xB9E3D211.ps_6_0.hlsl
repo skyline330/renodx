@@ -1,6 +1,7 @@
 #include "../../tonemap.hlsl"
 
 // Trigger aftershock (FIRE) - Shiyu
+
 Texture2D<float4> _BlitTex : register(t0);
 
 Texture2D<float4> _Grain_Texture : register(t1);
@@ -413,7 +414,16 @@ float4 main(
     _602 = _564;
     _603 = _565;
   }
-  SV_Target.xyz = renodx::draw::RenderIntermediatePass(float3(_601, _602, _603));
+  SV_Target.x = _601;
+  SV_Target.y = _602;
+  SV_Target.z = _603;
   SV_Target.w = _473;
+
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    SV_Target.xyz = applyFilmGrain(SV_Target.xyz, TEXCOORD);
+  }
+
+  SV_Target.xyz = renodx::draw::RenderIntermediatePass(SV_Target.xyz);
+
   return SV_Target;
 }
