@@ -169,7 +169,10 @@ float3 ApplyToneCurveExtendedWithHermite(
   // Correct Hue/Chroma
   float3 bt709_tonemapped_prebluecorrect = renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1);
   float3 bt709_hue_and_chrominance_source = renodx::color::bt709::from::AP1(vanilla);
+  // float3 bt709_hue_and_chrominance_source = renodx::color::bt709::from::AP1(renodx::tonemap::ReinhardPiecewise(tonemapped_prebluecorrect_ap1, 10.f, 1.f));
   tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(HueAndChrominanceOKLab(bt709_tonemapped_prebluecorrect, bt709_hue_and_chrominance_source, RENODX_TONE_MAP_HUE_SHIFT, RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT, 1.0f));
+
+  // tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(renodx::draw::ApplyPerChannelCorrection(renodx::color::bt709::from::AP1(untonemapped_rrt_prebluecorrect_ap1), renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1)));
 
   // Move to pre-encode
   // float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
