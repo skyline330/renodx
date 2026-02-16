@@ -234,6 +234,18 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
     },
         new renodx::utils::settings::Setting{
+        .key = "fxVignetteStrength",
+        .binding = &shader_injection.fxVignetteStrength,
+        .default_value = 50.f,
+        .label = "Vignette Strength",
+        .section = "Effects",
+        .tooltip = "Adjusts vignette strength."
+                   "\n50 = Vanilla",
+        .min = 0.f,
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+    },
+        new renodx::utils::settings::Setting{
         .key = "fxRCASAmount",
         .binding = &shader_injection.fxRCASAmount,
         .default_value = 50.f,
@@ -272,7 +284,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Effects",
         .tooltip = "Sets the peak brightness for video content in nits."
                    "\nNot recommended to exceed 600 nits.",
-        .min = 48.f,
+        .min = 80.f,
         .max = 1000.f,
     },
     new renodx::utils::settings::Setting{
@@ -481,7 +493,14 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .new_format = reshade::api::format::r16g16b16a16_float,
           .ignore_size = true,
       });
-
+      
+      //  R11G11B10_float resources - Main game
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r11g11b10_float,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+        //   .ignore_size = true,
+      });
+      
       {
         auto* setting = new renodx::utils::settings::Setting{
             .key = "swapChainEncoding",

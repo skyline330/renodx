@@ -65,6 +65,10 @@ void main(
 
   o0.xyz = hdr_video;
 
+  if (injectedData.fxFilmGrainAmount > 0.0f) {
+    o0.xyz = applyFilmGrain(o0.xyz, v1.xy);
+  }
+  
   o0.w = 1 + -cb0[5].x;
   return;
 }

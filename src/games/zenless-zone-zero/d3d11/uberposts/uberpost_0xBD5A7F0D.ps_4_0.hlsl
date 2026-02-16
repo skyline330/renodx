@@ -432,6 +432,11 @@ void main(
   } else {
     o0.w = r6.w;
   }
+
+  // Vignette
+
+  float vignette_value = lerp(1.0, r0.x, injectedData.fxVignetteStrength);
+
   r0.x = cmp(0 < cb1[7].z);
   if (r0.x != 0) {
     r1.yz = -cb1[7].xy + r1.zw;
@@ -443,17 +448,20 @@ void main(
     r0.x = log2(r0.x);
     r0.x = cb1[7].w * r0.x;
     r0.x = exp2(r0.x);
+
+    r0.x = 1.0;  // Disable original vignette and apply after tonemapping
+
     r1.yzw = float3(1,1,1) + -cb1[6].xyz;
     r1.yzw = r0.xxx * r1.yzw + cb1[6].xyz;
     r3.xyz = r3.xyz * r1.yzw;
   }
 
   float3 untonemapped = (r3.xyz);
-
+  /*
   if (injectedData.fxRCASAmount > 0.0f) {
     untonemapped = ApplyRCAS(untonemapped, v1.xy, t0, s0_s);
   }
-
+  */
   renodx::lut::Config lut_config = renodx::lut::config::Create(
       s0_s,
       1.f,
@@ -645,6 +653,8 @@ void main(
   // o0.xyz = saturate(r5.yyy ? r0.yzw : r1.xyz);
 
   o0.xyz = (r5.yyy ? r0.yzw : r1.xyz);
+
+  o0.xyz *= vignette_value;  // Apply vignette after tonemapping
 
   if (injectedData.fxFilmGrainAmount > 0.0f) {
     o0.xyz = applyFilmGrain(o0.xyz, v1.xy);

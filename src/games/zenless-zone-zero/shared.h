@@ -30,6 +30,7 @@ struct ShaderInjectData {
   float fxRCASAmount;
   float fxFilmGrainAmount;
   float custom_random;
+  float fxVignetteStrength;
 
   float toneMapVideoNits;
   float toneMapHdrVideo;
@@ -77,6 +78,7 @@ cbuffer injected_buffer : register(b13) {
 
 #define CUSTOM_GRAIN_STRENGTH                  injectedData.fxFilmGrainAmount
 #define CUSTOM_RANDOM                          injectedData.custom_random
+#define VIGNETTE_STRENGTH                      injectedData.fxVignetteStrength
 
 #include "../../shaders/renodx.hlsl"
 #endif
