@@ -155,55 +155,6 @@ void ApplyFilmToneMapWithBlueCorrect(float untonemapped_r, float untonemapped_g,
 // SDR Luts
 // #if 1
 
-/// Piecewise linear + exponential compression to a target value starting from a specified number.
-/// https://www.ea.com/frostbite/news/high-dynamic-range-color-grading-and-display-in-frostbite
-#define EXPONENTIALROLLOFF_GENERATOR(T)                                                                            \
-  T ExponentialRollOffExtended(T input, float rolloff_start = 0.20f, float output_max = 1.f, float clip = 100.f) { \
-    T rolloff_size = output_max - rolloff_start;                                                                   \
-    T overage = -max((T)0, input - rolloff_start);                                                                 \
-    T clip_size = rolloff_start - clip;                                                                            \
-    T rolloff_value = (T)1.0f - exp(overage / rolloff_size);                                                       \
-    T clip_value = (T)1.0f - exp(clip_size / rolloff_size);                                                        \
-    T new_overage = mad(rolloff_size, rolloff_value / clip_value, overage);                                        \
-    return input + new_overage;                                                                                    \
-  }
-EXPONENTIALROLLOFF_GENERATOR(float)
-EXPONENTIALROLLOFF_GENERATOR(float3)
-#undef EXPONENTIALROLLOFF_GENERATOR
-
-/// Applies Exponential Roll-Off Extended tonemapping by luminance.
-float3 LUTToneMap(float3 untonemapped, float rolloff_start = 0.25f, float output_max = 1.f) {
-  // if (!is_hdr) return saturate(untonemapped);  // no additional tonemap needed for SDR
-
-  // float white_clip = (RENODX_TONE_MAP_TYPE == 1.f) ? 100.f : RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
-  float white_clip = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
-
-  float y_in = renodx::color::y::from::BT709(untonemapped);
-  float y_out = exp2(ExponentialRollOffExtended(
-      log2(y_in),
-      log2(rolloff_start),
-      log2(output_max),
-      log2(white_clip)));
-  float3 tonemapped = renodx::color::correct::Luminance(untonemapped, y_in, y_out);
-
-  return tonemapped;
-}
-
-float3 ConditionalUpgradeToneMap(
-    float3 color_untonemapped,
-    float3 color_tonemapped,
-    float3 color_tonemapped_graded,
-    float post_process_strength = 1.f,
-    float auto_correction = 0.f) {
-  // if (!is_hdr) return color_tonemapped_graded;  // no upgrade needed for SDR
-
-  return renodx::tonemap::UpgradeToneMap(color_untonemapped,
-                                         color_tonemapped,
-                                         color_tonemapped_graded,
-                                         post_process_strength,
-                                         auto_correction);
-}
-
 renodx::lut::Config CreateSRGBInSRGBOutLUTConfig() {
   renodx::lut::Config lut_config = renodx::lut::config::Create();
   lut_config.scaling = CUSTOM_LUT_SCALING;
@@ -351,11 +302,15 @@ float3 SampleLUTSRGBInSRGBOut(Texture2D<float4> lut_texture, SamplerState lut_sa
 void SampleLUTUpgradeToneMap(float3 color_lut_input, SamplerState lut_sampler, Texture2D<float4> lut_texture, inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float3 color_lut_input_tonemapped = LUTToneMap(color_lut_input);
+  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+
+  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
   float3 lutted = SampleLUTSRGBInSRGBOut(lut_texture, lut_sampler, color_lut_input_tonemapped, cb_config);
 
-  color_output = ConditionalUpgradeToneMap(color_lut_input, color_lut_input_tonemapped, lutted, CUSTOM_LUT_STRENGTH);
+  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+
+  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
@@ -458,11 +413,15 @@ float3 Sample2LUTSRGBInSRGBOut(Texture2D<float4> lut_texture1, Texture2D<float4>
 void Sample2LUTsUpgradeToneMap(float3 color_lut_input, SamplerState lut_sampler1, SamplerState lut_sampler2, Texture2D<float4> lut_texture1, Texture2D<float4> lut_texture2, inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float3 color_lut_input_tonemapped = LUTToneMap(color_lut_input);
+  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+
+  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
   float3 lutted = Sample2LUTSRGBInSRGBOut(lut_texture1, lut_texture2, lut_sampler1, lut_sampler2, color_lut_input_tonemapped, cb_config);
 
-  color_output = ConditionalUpgradeToneMap(color_lut_input, color_lut_input_tonemapped, lutted, CUSTOM_LUT_STRENGTH);
+  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+
+  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
@@ -583,7 +542,9 @@ void Sample3LUTsUpgradeToneMap(
     inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float3 color_lut_input_tonemapped = LUTToneMap(color_lut_input);
+  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+
+  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
   float3 lutted = Sample3LUTSRGBInSRGBOut(
       lut_texture1, lut_texture2, lut_texture3,
@@ -591,7 +552,9 @@ void Sample3LUTsUpgradeToneMap(
       color_lut_input_tonemapped,
       cb_config);
 
-  color_output = ConditionalUpgradeToneMap(color_lut_input, color_lut_input_tonemapped, lutted, CUSTOM_LUT_STRENGTH);
+  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+
+  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
@@ -713,7 +676,9 @@ void Sample4LUTsUpgradeToneMap(
     inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float3 color_lut_input_tonemapped = LUTToneMap(color_lut_input);
+  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+
+  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
   float3 lutted = Sample4LUTSRGBInSRGBOut(
       lut_texture1, lut_texture2, lut_texture3, lut_texture4,
@@ -721,7 +686,9 @@ void Sample4LUTsUpgradeToneMap(
       color_lut_input_tonemapped,
       cb_config);
 
-  color_output = ConditionalUpgradeToneMap(color_lut_input, color_lut_input_tonemapped, lutted, CUSTOM_LUT_STRENGTH);
+  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+
+  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }

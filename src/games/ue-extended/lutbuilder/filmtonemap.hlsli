@@ -158,12 +158,20 @@ float3 ApplyToneCurveExtendedWithHermite(
   float3 tonemapped_prebluecorrect_ap1 =
       unrealengine::filmtonemap::extended::ApplyToneCurveExtended(untonemapped_rrt_prebluecorrect_ap1, vanilla, film_params);
 
+  // #if 1
+  //   // Blend extended with vanilla (0.2 strength) up to 0.5f
+  //   tonemapped_prebluecorrect_ap1 = lerp(
+  //       vanilla,
+  //       lerp(tonemapped_prebluecorrect_ap1, vanilla, 0.2f),
+  //       saturate(vanilla / 0.5f));
+  // #endif
+
+  //
 #if 1
-  // Blend extended with vanilla (0.2 strength) up to 0.5f
   tonemapped_prebluecorrect_ap1 = lerp(
       vanilla,
-      lerp(tonemapped_prebluecorrect_ap1, vanilla, 0.2f),
-      saturate(vanilla / 0.5f));
+      tonemapped_prebluecorrect_ap1,
+      saturate(vanilla / 0.2f));
 #endif
 
   // Correct Hue/Chroma
