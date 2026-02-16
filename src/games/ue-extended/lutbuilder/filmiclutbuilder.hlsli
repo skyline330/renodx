@@ -302,15 +302,21 @@ float3 SampleLUTSRGBInSRGBOut(Texture2D<float4> lut_texture, SamplerState lut_sa
 void SampleLUTUpgradeToneMap(float3 color_lut_input, SamplerState lut_sampler, Texture2D<float4> lut_texture, inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+  // Clip lut if SDR
+  if (RENODX_TONE_MAP_TYPE == 0.f) {
+    float3 sdr_lut = SampleLUTSRGBInSRGBOut(lut_texture, lut_sampler, color_lut_input, cb_config);
+    color_output = saturate(lerp(color_lut_input, sdr_lut, saturate(CUSTOM_LUT_STRENGTH)));
+  } else {
+    float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input);
 
-  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
+    float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
-  float3 lutted = SampleLUTSRGBInSRGBOut(lut_texture, lut_sampler, color_lut_input_tonemapped, cb_config);
+    float3 lutted = SampleLUTSRGBInSRGBOut(lut_texture, lut_sampler, color_lut_input_tonemapped, cb_config);
 
-  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+    float3 lutted_inversed = (lutted / scale);  // Inverse scale
 
-  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+    color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+  }
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
@@ -413,15 +419,20 @@ float3 Sample2LUTSRGBInSRGBOut(Texture2D<float4> lut_texture1, Texture2D<float4>
 void Sample2LUTsUpgradeToneMap(float3 color_lut_input, SamplerState lut_sampler1, SamplerState lut_sampler2, Texture2D<float4> lut_texture1, Texture2D<float4> lut_texture2, inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+  if (RENODX_TONE_MAP_TYPE == 0.f) {
+    float3 sdr_lut = Sample2LUTSRGBInSRGBOut(lut_texture1, lut_texture2, lut_sampler1, lut_sampler2, color_lut_input, cb_config);
+    color_output = saturate(lerp(color_lut_input, sdr_lut, saturate(CUSTOM_LUT_STRENGTH)));
+  } else {
+    float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input);
 
-  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
+    float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
-  float3 lutted = Sample2LUTSRGBInSRGBOut(lut_texture1, lut_texture2, lut_sampler1, lut_sampler2, color_lut_input_tonemapped, cb_config);
+    float3 lutted = Sample2LUTSRGBInSRGBOut(lut_texture1, lut_texture2, lut_sampler1, lut_sampler2, color_lut_input_tonemapped, cb_config);
 
-  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+    float3 lutted_inversed = (lutted / scale);  // Inverse scale
 
-  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+    color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+  }
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
@@ -542,19 +553,29 @@ void Sample3LUTsUpgradeToneMap(
     inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+  if (RENODX_TONE_MAP_TYPE == 0.f) {
+    float3 sdr_lut = Sample3LUTSRGBInSRGBOut(
+        lut_texture1, lut_texture2, lut_texture3,
+        lut_sampler1, lut_sampler2, lut_sampler3,
+        color_lut_input,
+        cb_config);
 
-  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
+    color_output = saturate(lerp(color_lut_input, sdr_lut, saturate(CUSTOM_LUT_STRENGTH)));
+  } else {
+    float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input);
 
-  float3 lutted = Sample3LUTSRGBInSRGBOut(
-      lut_texture1, lut_texture2, lut_texture3,
-      lut_sampler1, lut_sampler2, lut_sampler3,
-      color_lut_input_tonemapped,
-      cb_config);
+    float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
-  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+    float3 lutted = Sample3LUTSRGBInSRGBOut(
+        lut_texture1, lut_texture2, lut_texture3,
+        lut_sampler1, lut_sampler2, lut_sampler3,
+        color_lut_input_tonemapped,
+        cb_config);
 
-  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+    float3 lutted_inversed = (lutted / scale);  // Inverse scale
+
+    color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+  }
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
@@ -676,19 +697,28 @@ void Sample4LUTsUpgradeToneMap(
     inout float output_r, inout float output_g, inout float output_b, UECbufferConfig cb_config) {
   float3 color_output = color_lut_input;
 
-  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input, 1.f);
+  if (RENODX_TONE_MAP_TYPE == 0.f) {
+    float3 sdr_lut = Sample4LUTSRGBInSRGBOut(
+        lut_texture1, lut_texture2, lut_texture3, lut_texture4,
+        lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4,
+        color_lut_input,
+        cb_config);
+    color_output = saturate(lerp(color_lut_input, sdr_lut, saturate(CUSTOM_LUT_STRENGTH)));
+  } else {
+    float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input);
 
-  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
+    float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap MaxCh to 1
 
-  float3 lutted = Sample4LUTSRGBInSRGBOut(
-      lut_texture1, lut_texture2, lut_texture3, lut_texture4,
-      lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4,
-      color_lut_input_tonemapped,
-      cb_config);
+    float3 lutted = Sample4LUTSRGBInSRGBOut(
+        lut_texture1, lut_texture2, lut_texture3, lut_texture4,
+        lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4,
+        color_lut_input_tonemapped,
+        cb_config);
 
-  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+    float3 lutted_inversed = (lutted / scale);  // Inverse scale
 
-  color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+    color_output = lerp(color_lut_input, lutted_inversed, saturate(CUSTOM_LUT_STRENGTH));
+  }
 
   output_r = color_output.r, output_g = color_output.g, output_b = color_output.b;
 }
