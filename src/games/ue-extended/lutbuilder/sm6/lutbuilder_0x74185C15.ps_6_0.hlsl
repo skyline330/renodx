@@ -48,8 +48,13 @@ cbuffer cb0 : register(b0) {
   float cb0_043z : packoffset(c043.z);
   float cb0_043w : packoffset(c043.w);
   int cb0_044x : packoffset(c044.x);
-  int cb0_044y : packoffset(c044.y);
-  int cb0_044z : packoffset(c044.z);
+
+  // int cb0_044y : packoffset(c044.y);
+  int output_device : packoffset(c044.y);
+
+  // int cb0_044z : packoffset(c044.z);
+  int output_gamut : packoffset(c044.z);
+
   float cb0_044w : packoffset(c044.w);
   float cb0_045x : packoffset(c045.x);
   float cb0_046x : packoffset(c046.x);
@@ -151,6 +156,10 @@ float4 main(
     noperspective float4 SV_Position: SV_Position,
     nointerpolation uint SV_RenderTargetArrayIndex: SV_RenderTargetArrayIndex) : SV_Target {
   float4 SV_Target;
+
+  int cb0_044z = output_gamut;
+  int cb0_044y = output_device;
+
   float _5 = TEXCOORD.x + -0.015625f;
   float _6 = TEXCOORD.y + -0.015625f;
   float _9 = float((uint)(int)(SV_RenderTargetArrayIndex));
@@ -229,6 +238,7 @@ float4 main(
   float _2792;
   float _2793;
   float _2794;
+
   if (!(cb0_044z == 1)) {
     if (!(cb0_044z == 2)) {
       if (!(cb0_044z == 3)) {
@@ -275,6 +285,7 @@ float4 main(
     _57 = -0.045465391129255295f;
     _58 = 1.0477596521377563f;
   }
+
   if (_13) {
     float _66 = exp2(log2(_5 * 1.0322580337524414f) * 0.012683313339948654f);
     float _67 = exp2(log2(_6 * 1.0322580337524414f) * 0.012683313339948654f);
@@ -287,6 +298,7 @@ float4 main(
     _114 = ((exp2((_6 * 14.45161247253418f) + -6.07624626159668f) * 0.18000000715255737f) + -0.002667719265446067f);
     _115 = ((exp2((_9 * 0.4516128897666931f) + -6.07624626159668f) * 0.18000000715255737f) + -0.002667719265446067f);
   }
+
   float _118 = cb0_044w * 1.0005563497543335f;
   float _132 = select((_118 <= 7000.0f), (((((2967800.0f - (4604438528.0f / cb0_044w)) / _118) + 99.11000061035156f) / _118) + 0.24406300485134125f), (((((1901800.0f - (2005284352.0f / cb0_044w)) / _118) + 247.47999572753906f) / _118) + 0.23703999817371368f));
   float _146 = ((((cb0_044w * 1.2864121856637212e-07f) + 0.00015411825734190643f) * cb0_044w) + 0.8601177334785461f) / ((((cb0_044w * 7.081451371959702e-07f) + 0.0008424202096648514f) * cb0_044w) + 1.0f);
@@ -428,7 +440,7 @@ float4 main(
   cb_config.ue_bluecorrection = cb0_066z;
   cb_config.ue_colorscale = float3(cb0_042y, cb0_042z, cb0_042w);
 
-  SV_Target = ProcessLutbuilder(float3(_811, _813, _815), cb_config, SV_Target, cb0_044y);
+  SV_Target = ProcessLutbuilder(float3(_811, _813, _815), cb_config, SV_Target, output_device);
   return SV_Target;
 
   float _818 = mad(_25, _815, mad(_24, _813, (_811 * _23)));

@@ -4,7 +4,6 @@
 #define ENABLE_SLIDERS   1
 #define FIX_POST_PROCESS 2
 
-
 #define RENODX_TONE_MAP_TYPE                   shader_injection.tone_map_type  // 0 - Vanilla, 1 - None, 2 - ACES, 3 - RenoDRT, 4 - SDR
 #define RENODX_PEAK_WHITE_NITS                 shader_injection.peak_white_nits
 #define RENODX_DIFFUSE_WHITE_NITS              shader_injection.diffuse_white_nits
@@ -33,8 +32,9 @@
 #define CUSTOM_SHARPNESS      shader_injection.custom_sharpness
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
-#define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip  // 0 - Off, 1 - 0.0001 nits
-
+#define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip   // 0 - Off, 1 - 0.0001 nits
+#define PROCESSING_PATH     shader_injection.processing_path       // 0 hdr, 1 sdr // temp name
+#define SWAP_CHAIN_ENCODING shader_injection.processing_use_scrgb  // 0 HDR10, 1 scRGB
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -68,8 +68,10 @@ struct ShaderInjectData {
   float custom_sharpness;
 
   // float fix_post_process;
-};
 
+  float processing_path;
+  float processing_use_scrgb;
+};
 
 #ifndef __cplusplus
 
@@ -84,8 +86,6 @@ cbuffer injected_buffer : register(b13) {
 #if (__SHADER_TARGET_MAJOR >= 6)
 #pragma dxc diagnostic ignored "-Wparentheses-equality"
 #endif
-
-
 
 #include "../../shaders/renodx.hlsl"
 

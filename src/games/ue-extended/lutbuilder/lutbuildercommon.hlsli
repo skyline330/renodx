@@ -207,15 +207,23 @@ float3 GammaCorrectHuePreserving(float3 incorrect_color) {
 
 float3 ApplyGammaCorrection(float3 incorrect_color) {
   float3 corrected_color;
-  if (RENODX_GAMMA_CORRECTION == 2.f) {
-    corrected_color = GammaCorrectHuePreserving(incorrect_color);
-  } else if (RENODX_GAMMA_CORRECTION == 1.f) {
+
+  if (RENODX_GAMMA_CORRECTION == 1.f) {
     corrected_color = renodx::color::correct::GammaSafe(incorrect_color);
   } else {
     corrected_color = incorrect_color;
   }
 
   return corrected_color;
+}
+
+float3 ScaleScene(float3 color) {
+  if (RENODX_DIFFUSE_WHITE_NITS != RENODX_GRAPHICS_WHITE_NITS) {
+    color = renodx::color::gamma::DecodeSafe(color);
+    color *= (RENODX_DIFFUSE_WHITE_NITS / RENODX_GRAPHICS_WHITE_NITS);
+    color = renodx::color::gamma::EncodeSafe(color);
+  }
+  return color;
 }
 
 float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint device) {
@@ -227,6 +235,7 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
   float3 final_color = (float3(r, g, b));
 
   // Dont displaymapp SDR
+  [branch]
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     // Displaymap to User Peak in BT2020
     float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
@@ -244,15 +253,24 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
     final_color = bt709_colorgraded_color;
   }
 
-  // Saturate if SDR path
+  // Saturate if SDR TM is selected
   if (RENODX_TONE_MAP_TYPE == 0.f) final_color = saturate(final_color);
 
-  // Gamma Correction
-  final_color = ApplyGammaCorrection(final_color);
+  // Intermediate Encoding
+  float3 encoded_color;
+  [branch]
+  if (PROCESSING_PATH == 0.f) {  // HDR Path
+    // Gamma Correction
+    final_color = ApplyGammaCorrection(final_color);
 
-  // Encode
-  float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
-  float3 encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
+    // Encode
+    float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
+    encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
+  } else {
+    // SDR Path
+    float3 srgb_color = renodx::color::srgb::Encode(final_color);
+    encoded_color = ScaleScene(srgb_color);
+  }
 
   return SV_Target = float4(encoded_color / 1.05f, 0.f);
 }
