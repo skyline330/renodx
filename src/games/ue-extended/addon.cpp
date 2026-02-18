@@ -127,6 +127,17 @@ renodx::utils::settings::Settings settings = {
     // },
 
     new renodx::utils::settings::Setting{
+        .key = "HueInputColor",
+        .binding = &shader_injection.tone_map_hue_input_color,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Hue/Chroma Input Color",
+        .section = "Scene Grading",
+        .tooltip = "Which color is used for hue/chroma correction",
+        .labels = {"Per-Channel", "Vanilla"},
+    },
+
+    new renodx::utils::settings::Setting{
         .key = "ToneMapHueShift",
         .binding = &shader_injection.tone_map_hue_shift,
         .default_value = 50.f,
@@ -528,15 +539,6 @@ void AddExpedition33Upgrades() {
   });
 }
 
-void AddAvowedUpgrades() {
-  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      .old_format = reshade::api::format::r10g10b10a2_unorm,
-      .new_format = reshade::api::format::r16g16b16a16_float,
-      .use_resource_view_cloning = true,
-      .aspect_ratio = 4360.f / 2160.f,
-  });
-}
-
 void AddWuchangUpgrades() {
   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
       .old_format = reshade::api::format::r10g10b10a2_unorm,
@@ -562,8 +564,6 @@ void AddGamePatches() {
 
   if (product_name == "Expedition 33") {
     AddExpedition33Upgrades();
-  } else if (product_name == "Avowed") {
-    AddAvowedUpgrades();
   } else if (product_name == "Tony Hawks(TM) Pro Skater(TM) 3 + 4") {
     renodx::mods::swapchain::swapchain_proxy_revert_state = true;
   } else if (product_name == "Project_Plague") {
@@ -625,7 +625,7 @@ const std::unordered_map<
         {
             "Avowed",
             {
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+                {"Set_Path", 0.f},
             },
         },
         {

@@ -12,6 +12,7 @@
 #define RENODX_GAMMA_CORRECTION_UI             shader_injection.gamma_correction_ui
 #define RENODX_TONE_MAP_HUE_CORRECTION_TYPE    shader_injection.tone_map_hue_correction_type  // 0 - Highlights, Midtones, & Shadows, 1 - Midtones & Shadows
 #define RENODX_TONE_MAP_HUE_CORRECTION         shader_injection.tone_map_hue_correction
+#define RENODX_TONE_MAP_HUE_INPUT_COLOR        shader_injection.tone_map_hue_input_color
 #define RENODX_TONE_MAP_HUE_SHIFT              shader_injection.tone_map_hue_shift
 #define RENODX_TONE_MAP_EXPOSURE               shader_injection.tone_map_exposure
 #define RENODX_TONE_MAP_HIGHLIGHTS             shader_injection.tone_map_highlights
@@ -47,6 +48,7 @@ struct ShaderInjectData {
   float gamma_correction_ui;
   float tone_map_hue_correction_type;
   float tone_map_hue_correction;
+  float tone_map_hue_input_color;
   float tone_map_hue_shift;
   float tone_map_chroma_correct_blowout;
   float override_black_clip;
