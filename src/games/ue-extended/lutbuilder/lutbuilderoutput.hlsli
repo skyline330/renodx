@@ -1,5 +1,6 @@
-#include "./lutbuildercommon.hlsli"
 #include "./filmiclutbuilder.hlsli"
+#include "./lutbuildercommon.hlsli"
+
 
 // No SDR Lut
 float4 ProcessLutbuilder(float3 untonemapped_ap1, UECbufferConfig cb_config, float4 SV_Target, uint outputdevice) {

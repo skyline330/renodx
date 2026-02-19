@@ -242,10 +242,9 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
     if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
 
     // Doing stuff in bt2020 is almost always better than BT709
-    float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);                                             // displaymap in bt2020
-    float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Display map to peak
-    // float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::PerChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Display map to peak
-    float3 bt709_displaymapped_color = renodx::color::bt709::from::BT2020(bt2020_displaymapped_color);  // Back to BT709
+    float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);
+    float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Displaymap Max-Ch to peak
+    float3 bt709_displaymapped_color = renodx::color::bt709::from::BT2020(bt2020_displaymapped_color);                       // Back to BT709
 
     // Colorgrade in AP1, and back to BT709
     renodx::color::grade::Config cg_config = CreateColorGradingConfig();
