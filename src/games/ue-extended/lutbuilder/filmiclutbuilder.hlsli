@@ -109,9 +109,9 @@ float3 ApplyBlueCorrectionPost(float3 tonemapped, UECbufferConfig cb_config) {
   return float3(_1149, _1150, _1151);
 }
 
-void ApplyFilmToneMapWithBlueCorrect(float untonemapped_r, float untonemapped_g, float untonemapped_b,
-                                     inout float tonemapped_r, inout float tonemapped_g, inout float tonemapped_b, UECbufferConfig cb_config) {
-  float3 untonemapped_ap1 = float3(untonemapped_r, untonemapped_g, untonemapped_b);
+void ApplyFilmToneMapWithBlueCorrect(float3 untonemapped,
+                                     inout float3 tonemapped, UECbufferConfig cb_config) {
+  float3 untonemapped_ap1 = untonemapped;
   renodx::color::grade::Config cg_config = CreateColorGradingConfig();
   float y = renodx::color::y::from::AP1(untonemapped_ap1);
   float3 hue_reference_color = untonemapped_ap1;
@@ -147,7 +147,7 @@ void ApplyFilmToneMapWithBlueCorrect(float untonemapped_r, float untonemapped_g,
   //   tonemapped_ap1 = ApplySaturationBlowoutHueCorrectionHighlightSaturationAP1(tonemapped_ap1, hue_reference_color, y, cg_config, RENODX_TONE_MAP_HUE_CORRECTION_TYPE);
   // }
 
-  tonemapped_r = tonemapped_ap1.r, tonemapped_g = tonemapped_ap1.g, tonemapped_b = tonemapped_ap1.b;
+  tonemapped = tonemapped_ap1;
 
   return;
 }

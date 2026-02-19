@@ -169,23 +169,17 @@ float3 ApplyToneCurveExtendedWithHermite(
   // Correct Hue/Chroma
   float3 bt709_tonemapped_prebluecorrect = renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1);
   float3 bt709_vanilla = renodx::color::bt709::from::AP1(vanilla);
-  // Reinhard Piecewise Per-Channel to 1000 on the extended color
+  // Reinhard Piecewise Per-Channel to variable peak (default 5) on the extended color
   float3 bt709_per_ch = renodx::color::bt709::from::AP1(renodx::tonemap::ReinhardPiecewise(tonemapped_prebluecorrect_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f));
 
   float3 bt709_hue_and_chrominance_source = bt709_per_ch;
 
   // Only on Hue Vanilla Input Color
 
-  float y = renodx::color::y::from::AP1(vanilla);
   float hue_shift_strength = RENODX_TONE_MAP_HUE_SHIFT;
   float chroma_correct_strength = RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT;
 
-  // hue_shift_strength = lerp(RENODX_TONE_MAP_HUE_SHIFT, sqrt(RENODX_TONE_MAP_HUE_SHIFT), saturate((min(1.f, y))));
-  // chroma_correct_strength = lerp(RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT, sqrt(RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT), saturate((min(1.f, y))));
-
   tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(HueAndChrominanceOKLab(bt709_tonemapped_prebluecorrect, bt709_hue_and_chrominance_source, saturate(hue_shift_strength), saturate(chroma_correct_strength), 1.0f));
-
-  // tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(renodx::draw::ApplyPerChannelCorrection(renodx::color::bt709::from::AP1(untonemapped_rrt_prebluecorrect_ap1), renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1)));
 
   return tonemapped_prebluecorrect_ap1;
 }

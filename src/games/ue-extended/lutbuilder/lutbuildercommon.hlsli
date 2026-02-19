@@ -150,9 +150,9 @@ float3 ApplyExposureContrastFlareHighlightsShadowsByLuminance(float3 untonemappe
   return color;
 }
 
-float3 ApplySaturationBlowoutHighlightSaturationAP1(float3 tonemapped, renodx::color::grade::Config config) {
-  float3 color = tonemapped;
-  float y = renodx::color::y::from::AP1(color);
+float3 ApplySaturationBlowoutHighlightSaturationAP1(float3 tonemapped_ap1, float3 untonemapped_ap1, renodx::color::grade::Config config) {
+  float3 color = max(0, tonemapped_ap1);
+  float y = renodx::color::y::from::AP1(untonemapped_ap1);
 
   if (config.saturation != 1.f || config.dechroma != 0.f || config.blowout != 0.f) {
     float3 perceptual_new = renodx::color::oklab::from::BT709(renodx::color::bt709::from::AP1(color));
@@ -178,6 +178,39 @@ float3 ApplySaturationBlowoutHighlightSaturationAP1(float3 tonemapped, renodx::c
     color = renodx::color::bt709::from::OkLab(perceptual_new);
 
     color = renodx::color::ap1::from::BT709(color);
+    color = max(0, color);
+  }
+  return color;
+}
+
+float3 ApplySaturationBlowoutHighlightSaturationBT2020(float3 tonemapped_bt2020, float3 untonemapped_ap1, renodx::color::grade::Config config) {
+  float3 color = max(0, tonemapped_bt2020);
+  float y = renodx::color::y::from::AP1(untonemapped_ap1);
+
+  if (config.saturation != 1.f || config.dechroma != 0.f || config.blowout != 0.f) {
+    float3 perceptual_new = renodx::color::oklab::from::BT709(renodx::color::bt709::from::BT2020(color));
+
+    if (config.dechroma != 0.f) {
+      perceptual_new.yz *= lerp(1.f, 0.f, saturate(pow(y / (10000.f / 100.f), (1.f - config.dechroma))));
+    }
+
+    if (config.blowout != 0.f) {
+      float percent_max = saturate(y * 100.f / 10000.f);
+      // positive = 1 to 0, negative = 1 to 2
+      float blowout_strength = 100.f;
+      float blowout_change = pow(1.f - percent_max, blowout_strength * abs(config.blowout));
+      if (config.blowout < 0) {
+        blowout_change = (2.f - blowout_change);
+      }
+
+      perceptual_new.yz *= blowout_change;
+    }
+
+    perceptual_new.yz *= config.saturation;
+
+    color = renodx::color::bt709::from::OkLab(perceptual_new);
+
+    color = renodx::color::bt2020::from::BT709(color);
     color = max(0, color);
   }
   return color;
@@ -226,13 +259,12 @@ float3 ScaleScene(float3 color) {
   return color;
 }
 
-float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint device) {
+float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 SV_Target, uint device) {
   // if (RENODX_TONE_MAP_TYPE == 0 || device == 8u) return false;
 
   // final_color is in BT709
   // We displaymap + run Saturation/Dechroma/HighlightsSaturation so SDR Luts dont get griefed
   // And then go back to BT709 for SDR/HDR path branching
-  float3 final_color = (float3(r, g, b));
 
   // Dont displaymapp SDR
   [branch]
@@ -244,13 +276,13 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
     // Doing stuff in bt2020 is almost always better than BT709
     float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);
     float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Displaymap Max-Ch to peak
-    float3 bt709_displaymapped_color = renodx::color::bt709::from::BT2020(bt2020_displaymapped_color);                       // Back to BT709
 
-    // Colorgrade in AP1, and back to BT709
+    // Colorgrade in BT2020, and back to BT709
     renodx::color::grade::Config cg_config = CreateColorGradingConfig();
-    float3 bt709_colorgraded_color = renodx::color::bt709::from::AP1(ApplySaturationBlowoutHighlightSaturationAP1(renodx::color::ap1::from::BT709(bt709_displaymapped_color), cg_config));
+    float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_displaymapped_color, untonemapped_ap1, cg_config);
+    float3 bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);  // Back to BT709
 
-    final_color = bt709_colorgraded_color;
+    final_color = bt709_graded_color;
   }
 
   // Saturate if SDR TM is selected
@@ -268,7 +300,7 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
     encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
   } else {
     // SDR Path
-    float3 srgb_color = renodx::color::srgb::Encode(final_color);
+    float3 srgb_color = renodx::color::srgb::EncodeSafe(final_color);
     encoded_color = ScaleScene(srgb_color);
   }
 
