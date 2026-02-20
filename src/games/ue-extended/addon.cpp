@@ -727,6 +727,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "Mafia: The Old Country",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 
