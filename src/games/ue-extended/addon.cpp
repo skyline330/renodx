@@ -319,6 +319,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Replaces vanilla film grain with perceptual",
         .labels = {"Vanilla", "Perceptual"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
+        .is_visible = []() { return shader_injection.processing_path == 0; },
     },
     new renodx::utils::settings::Setting{
         .key = "FxGrainStrength",
@@ -329,6 +330,7 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type != 0 && shader_injection.custom_grain_type != 0; },
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return shader_injection.processing_path == 0; },
     },
     new renodx::utils::settings::Setting{
         .key = "FxSharpening",
@@ -339,6 +341,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Adds RCAS, as implemented by Lilium for HDR.",
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
         .parse = [](float value) { return value == 0 ? 0.f : exp2(-(1.f - (value * 0.01f))); },
+        .is_visible = []() { return shader_injection.processing_path == 0; },
     },
     new renodx::utils::settings::Setting{
         .key = "UIGammaCorrection",
@@ -350,6 +353,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Emulates a 2.2 EOTF for the UI",
         .labels = {"Off", "2.2"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
+        .is_visible = []() { return shader_injection.processing_path == 0; },
     },
 
     // new renodx::utils::settings::Setting{
@@ -1322,7 +1326,7 @@ void AddAdvancedSettings() {
         .default_value = 1.f,
         .label = "Upgrade Path",
         .section = "Resource Upgrades",
-        .tooltip = "Use the game's Native HDR, or Upgrade SDR.",
+        .tooltip = "Use the game's Native HDR (Off), or Upgrade the game to SDR (On)",
         .labels = {
             "Off",
             "On",
@@ -1349,7 +1353,7 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
     };
     add_setting(setting);
 
@@ -1370,7 +1374,7 @@ void AddAdvancedSettings() {
             "Any size",
         },
         .is_global = true,
-        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
     };
     add_setting(new_setting);
 
@@ -1409,7 +1413,7 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
     };
     add_setting(swapchain_setting);
     renodx::mods::swapchain::swapchain_proxy_compatibility_mode = swapchain_setting->GetValue() != 0;
@@ -1429,7 +1433,7 @@ void AddAdvancedSettings() {
             "scRGB",
         },
         .is_global = true,
-        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
     };
     add_setting(scrgb_setting);
 
@@ -1494,7 +1498,7 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
     };
     add_setting(lut_dump_setting);
 
