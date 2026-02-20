@@ -733,6 +733,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "Returnal",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 
