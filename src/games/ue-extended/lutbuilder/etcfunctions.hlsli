@@ -223,21 +223,33 @@ float3 psychotm_test4(
     }
   }
 
-  // Fixed white curve: Naka-Rushton to peak, per LMS channel (inline equation).
+  // // Fixed white curve: Naka-Rushton to peak, per LMS channel (inline equation).
+  // float3 lms_peak = lms_white * peak_value;
+  // float exponent_tone = max(cone_response_exponent, kEps);
+  // float3 p = max(lms_peak, kEps.xxx);
+  // float3 g = clamp(midgray_lms_anchor, kEps.xxx, p - kEps.xxx);
+  // float3 n = exponent_tone * p / max(p - g, kEps.xxx);
+  // float3 sign_lms = float3(
+  //     lms.x < 0.f ? -1.f : 1.f,
+  //     lms.y < 0.f ? -1.f : 1.f,
+  //     lms.z < 0.f ? -1.f : 1.f);
+  // float3 ax_lms = abs(lms);
+  // float3 sigma_n = pow(g, n - 1.f) * (p - g);
+  // float3 x_n = pow(ax_lms, n);
+  // float3 y = p * (x_n / max(x_n + sigma_n, kEps.xxx));
+  // float3 lms_toned = sign_lms * y;
+
+  // Trying out Per-Channel N2 in LMS
   float3 lms_peak = lms_white * peak_value;
   float exponent_tone = max(cone_response_exponent, kEps);
-  float3 p = max(lms_peak, kEps.xxx);
-  float3 g = clamp(midgray_lms_anchor, kEps.xxx, p - kEps.xxx);
-  float3 n = exponent_tone * p / max(p - g, kEps.xxx);
+  float3 peak = max(lms_peak, kEps.xxx);
   float3 sign_lms = float3(
       lms.x < 0.f ? -1.f : 1.f,
       lms.y < 0.f ? -1.f : 1.f,
       lms.z < 0.f ? -1.f : 1.f);
-  float3 ax_lms = abs(lms);
-  float3 sigma_n = pow(g, n - 1.f) * (p - g);
-  float3 x_n = pow(ax_lms, n);
-  float3 y = p * (x_n / max(x_n + sigma_n, kEps.xxx));
-  float3 lms_toned = sign_lms * y;
+  float3 abs_lms = abs(lms);
+  float3 n2_lms = renodx::tonemap::neutwo::PerChannel(abs_lms, peak);
+  float3 lms_toned = sign_lms * n2_lms;
 
   // Inline hue-preserve after tonemap.
   if (hue_restore > 0.f) {
