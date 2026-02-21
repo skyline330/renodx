@@ -297,16 +297,16 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
     } else if (TEST_TEST == 2.f) {
       float3 bt709_mapped_color = psychotm_test4(
           final_color,
-          peak_ratio,                 // peak_ratio
-          1.0f,                       // exposure
-          1.0f,                       // highlights
-          1.0f,                       // shadows
-          1.0f,                       // contrast
-          1.0f,                       // purity
-          0.0f,                       // bleaching
-          0.0f,                       // hue_restore
-          1.0,                        // clarity
-          RENODX_TONE_MAP_SATURATION  // nr contrast
+          peak_ratio,  // peak_ratio
+          1.0f,        // exposure
+          1.0f,        // highlights
+          1.0f,        // shadows
+          1.0f,        // contrast
+          1.0f,        // purity
+          0.0f,        // bleaching
+          0.0f,        // hue_restore
+          1.0,         // clarity
+          1.f          // nr contrast -- Can be set to saturaton for fancy NR contrast+saturation
       );
       float3 bt2020_color_mapped = renodx::color::bt2020::from::BT709(bt709_mapped_color);
       renodx::color::grade::Config cg_config = CreateColorGradingConfig();
