@@ -3,6 +3,8 @@
 #ifndef INCLUDE_LUTBUILDER_COMMON
 #define INCLUDE_LUTBUILDER_COMMON
 
+#include "./etcfunctions.hlsli"
+
 float3 HueAndChrominanceOKLab(
     float3 incorrect_color, float3 reference_color,
     float hue_correct_strength = 0.f,
@@ -273,14 +275,44 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
     float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
     if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
 
-    // Doing stuff in bt2020 is almost always better than BT709
-    float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);
-    float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Displaymap Max-Ch to peak
+    float3 bt709_graded_color;
+    // Max Ch N2
+    if (TEST_TEST == 0.f) {
+      // Doing stuff in bt2020 is almost always better than BT709
+      float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);
+      float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Displaymap Max-Ch to peak
 
-    // Colorgrade in BT2020, and back to BT709
-    renodx::color::grade::Config cg_config = CreateColorGradingConfig();
-    float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_displaymapped_color, untonemapped_ap1, cg_config);
-    float3 bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);  // Back to BT709
+      // Colorgrade in BT2020, and back to BT709
+      renodx::color::grade::Config cg_config = CreateColorGradingConfig();
+      float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_displaymapped_color, untonemapped_ap1, cg_config);
+      bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);  // Back to BT709
+      // NRG
+    } else if (TEST_TEST == 1.f) {
+      float3 bt709_mapped_color = NeutwoBT709WhiteForEnergy(final_color, peak_ratio);
+      float3 bt2020_color_mapped = renodx::color::bt2020::from::BT709(bt709_mapped_color);
+      renodx::color::grade::Config cg_config = CreateColorGradingConfig();
+      float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_color_mapped, untonemapped_ap1, cg_config);
+      bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);
+      // Psycho TM Beta4
+    } else if (TEST_TEST == 2.f) {
+      float3 bt709_mapped_color = psychotm_test4(
+          final_color,
+          peak_ratio,                 // peak_ratio
+          1.0f,                       // exposure
+          1.0f,                       // highlights
+          1.0f,                       // shadows
+          1.0f,                       // contrast
+          1.0f,                       // purity
+          0.0f,                       // bleaching
+          0.0f,                       // hue_restore
+          1.0,                        // clarity
+          RENODX_TONE_MAP_SATURATION  // nr contrast
+      );
+      float3 bt2020_color_mapped = renodx::color::bt2020::from::BT709(bt709_mapped_color);
+      renodx::color::grade::Config cg_config = CreateColorGradingConfig();
+      float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_color_mapped, untonemapped_ap1, cg_config);
+      bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);
+    }
 
     final_color = bt709_graded_color;
   }

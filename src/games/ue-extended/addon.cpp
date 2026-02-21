@@ -114,6 +114,7 @@ renodx::utils::settings::Settings settings = {
     //     .labels = {"Highlights, Midtones, & Shadows", "Midtones & Shadows"},
     //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
     // },
+
     // new renodx::utils::settings::Setting{
     //     .key = "ToneMapHueCorrection",
     //     .binding = &shader_injection.tone_map_hue_correction,
@@ -125,6 +126,17 @@ renodx::utils::settings::Settings settings = {
     //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
     //     .parse = [](float value) { return value * 0.01f; },
     // },
+
+    new renodx::utils::settings::Setting{
+        .key = "TestTest",
+        .binding = &shader_injection.test,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Tonemap Test",
+        .section = "Tone Mapping",
+        .tooltip = "Beta test for different tonemappers",
+        .labels = {"N2 Max Ch", "NRG", "PsychoTM Beta4"},
+    },
 
     new renodx::utils::settings::Setting{
         .key = "ToneMapPerChPeak",
@@ -319,7 +331,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Replaces vanilla film grain with perceptual",
         .labels = {"Vanilla", "Perceptual"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
-        .is_visible = []() { return shader_injection.processing_path == 0; },
+        //.is_visible = []() { return (shader_injection.processing_path == 0); },
     },
     new renodx::utils::settings::Setting{
         .key = "FxGrainStrength",
@@ -330,7 +342,7 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type != 0 && shader_injection.custom_grain_type != 0; },
         .parse = [](float value) { return value * 0.02f; },
-        .is_visible = []() { return shader_injection.processing_path == 0; },
+        //.is_visible = []() { return shader_injection.processing_path == 0; },
     },
     new renodx::utils::settings::Setting{
         .key = "FxSharpening",
@@ -341,7 +353,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Adds RCAS, as implemented by Lilium for HDR.",
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
         .parse = [](float value) { return value == 0 ? 0.f : exp2(-(1.f - (value * 0.01f))); },
-        .is_visible = []() { return shader_injection.processing_path == 0; },
+        //.is_visible = []() { return (shader_injection.processing_path == 0); },
     },
     new renodx::utils::settings::Setting{
         .key = "UIGammaCorrection",
@@ -353,7 +365,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Emulates a 2.2 EOTF for the UI",
         .labels = {"Off", "2.2"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
-        .is_visible = []() { return shader_injection.processing_path == 0; },
+        //.is_visible = []() { return (shader_injection.processing_path == 0); },
     },
 
     // new renodx::utils::settings::Setting{
@@ -1353,7 +1365,8 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
+        //.is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
+        .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
     add_setting(setting);
 
@@ -1374,7 +1387,8 @@ void AddAdvancedSettings() {
             "Any size",
         },
         .is_global = true,
-        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
+        //.is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
+        .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
     add_setting(new_setting);
 
@@ -1413,7 +1427,8 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
+        //.is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
+        .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
     add_setting(swapchain_setting);
     renodx::mods::swapchain::swapchain_proxy_compatibility_mode = swapchain_setting->GetValue() != 0;
@@ -1433,7 +1448,8 @@ void AddAdvancedSettings() {
             "scRGB",
         },
         .is_global = true,
-        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
+        //.is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
+        .is_visible = []() { return settings[0]->GetValue() >= 2; },
     };
     add_setting(scrgb_setting);
 
@@ -1498,7 +1514,7 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return (settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f); },
+        .is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
     };
     add_setting(lut_dump_setting);
 
