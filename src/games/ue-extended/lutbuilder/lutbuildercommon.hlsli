@@ -304,7 +304,7 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
           1.0f,        // contrast
           1.0f,        // purity
           0.0f,        // bleaching
-          0.0f,        // hue_restore
+          0.0f,        // hue_restore -- 0 default -- lerp(1.f, 0.f, (saturate(RENODX_TONE_MAP_HUE_SHIFT)))
           1.0,         // clarity
           1.f          // nr contrast -- Can be set to saturaton for fancy NR contrast+saturation
       );

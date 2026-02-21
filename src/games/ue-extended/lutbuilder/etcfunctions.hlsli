@@ -51,6 +51,40 @@ float3 NeutwoBT709WhiteForEnergy(float3 bt709_linear, float peak = 1.f) {
   return renodx::color::bt709::from::XYZ(xyz_out);
 }
 
+// Reconstruct target LMS with source hue direction at matched V* anchors.
+// This preserves hue angle while retaining target achromatic level + chroma strength.
+float3 PreserveLMSHueAtMatchedVStar(
+    float3 lms_source,
+    float3 lms_target,
+    float3 lms_white_unit,
+    float vstar_white_unit,
+    float amount) {
+  if (amount <= 0.f) {
+    return lms_target;
+  }
+
+  float vstar_source = 1.55f * lms_source.x + lms_source.y;
+  float vstar_target = 1.55f * lms_target.x + lms_target.y;
+
+  float3 lms_white_source = lms_white_unit * renodx::math::DivideSafe(vstar_source, vstar_white_unit, 0.f);
+  float3 lms_white_target = lms_white_unit * renodx::math::DivideSafe(vstar_target, vstar_white_unit, 0.f);
+
+  float3 dir_source = lms_source - lms_white_source;
+  float3 dir_target = lms_target - lms_white_target;
+
+  float len_source = length(dir_source);
+  float len_target = length(dir_target);
+
+  if (len_source <= 0.f || len_target <= 0.f) {
+    return lms_target;
+  }
+
+  float chroma_scale = renodx::math::DivideSafe(len_target, len_source, 0.f);
+  float3 lms_hue_preserved = lms_white_target + dir_source * chroma_scale;
+
+  return lerp(lms_target, lms_hue_preserved, amount);
+}
+
 // PsychoTM Beta4
 float3 psychotm_test4(
     float3 bt709_linear_input,
@@ -70,7 +104,7 @@ float3 psychotm_test4(
   static const float3x3 XYZ_FROM_LMS_2006 = renodx::math::Invert3x3(XYZ_TO_LMS_2006);
 
   // Match BT709WithBT2020 slider behavior for brightness-domain controls.
-  float3 midgray_xyz = renodx::color::xyz::from::BT2020(0.18f.xxx);
+  float3 midgray_xyz = renodx::color::xyz::from::BT2020(0.18f);
   float3 midgray_lms = mul(XYZ_TO_LMS_2006, midgray_xyz);
   float mid_gray_luminosity = 1.55f * midgray_lms.x + midgray_lms.y;
 
@@ -94,7 +128,7 @@ float3 psychotm_test4(
 
   // Fixed white basis: D65.
   float3 lms_raw = mul(XYZ_TO_LMS_2006, renodx::color::xyz::from::BT2020(bt2020));
-  float3 lms_white = mul(XYZ_TO_LMS_2006, renodx::color::xyz::from::BT2020(1.f.xxx));
+  float3 lms_white = mul(XYZ_TO_LMS_2006, renodx::color::xyz::from::BT2020(1.f));
   float vstar_white = 1.55f * lms_white.x + lms_white.y;
   float3 midgray_lms_anchor = lms_white * 0.18f;
 
@@ -118,7 +152,7 @@ float3 psychotm_test4(
     float3 acc = mul(lms_to_acc, cone_contrast);
     acc.yz *= purity_scale;
     float3 cone_contrast_scaled = mul(acc_to_lms, acc);
-    lms_raw = lms_white_sat * (1.f.xxx + cone_contrast_scaled);
+    lms_raw = lms_white_sat * (1.f + cone_contrast_scaled);
   }
 
   float3 lms_raw_source = lms_raw;
@@ -175,8 +209,8 @@ float3 psychotm_test4(
     float3 stimulus_nits = max(adapted_lms, 0.f) * max(diffuse_white_nits, 0.f);
     float3 stimulus_trolands = stimulus_nits * max(pupil_area_mm2, 0.f);
     float half_bleach_safe = max(half_bleach_trolands, kEps);
-    float3 availability_raw = 1.f.xxx / (1.f.xxx + stimulus_trolands / half_bleach_safe);
-    float3 availability = lerp(1.f.xxx, availability_raw, blend);
+    float3 availability_raw = 1.f / (1.f + stimulus_trolands / half_bleach_safe);
+    float3 availability = lerp(1.f, availability_raw, blend);
 
     // White-relative per-cone attenuation in LMS.
     float y_lm = lms.x + lms.y;
@@ -184,7 +218,7 @@ float3 psychotm_test4(
     if (y_lm > kEps && white_y_lm > kEps) {
       float3 white_at_y = lms_white * (y_lm / white_y_lm);
       float3 delta = lms - white_at_y;
-      delta *= max(availability, 0.f.xxx);
+      delta *= max(availability, 0.f);
       lms = white_at_y + delta;
     }
   }
@@ -200,7 +234,7 @@ float3 psychotm_test4(
       lms.y < 0.f ? -1.f : 1.f,
       lms.z < 0.f ? -1.f : 1.f);
   float3 ax_lms = abs(lms);
-  float3 sigma_n = pow(g, n - 1.f.xxx) * (p - g);
+  float3 sigma_n = pow(g, n - 1.f) * (p - g);
   float3 x_n = pow(ax_lms, n);
   float3 y = p * (x_n / max(x_n + sigma_n, kEps.xxx));
   float3 lms_toned = sign_lms * y;
