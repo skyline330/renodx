@@ -1,6 +1,6 @@
 #include "../lutbuilderoutput.hlsli"
 
-// Found in Jusant, 5.1.1
+// Found in Jusant // Wu Chang 5.1.1
 
 cbuffer cb0 : register(b0) {
   float cb0_008x : packoffset(c008.x);
@@ -257,7 +257,7 @@ float4 main(
   float _132 = (_123 / _127) + -1.0f;
   float _133 = (_126 / _127) + -1.0f;
 
-  //float _145 = (1.0f - exp2(((_127 * _127) * -4.0f) * cb0_036z)) * (1.0f - exp2(dot(float3(_131, _132, _133), float3(_131, _132, _133)) * -4.0f));
+  // float _145 = (1.0f - exp2(((_127 * _127) * -4.0f) * cb0_036z)) * (1.0f - exp2(dot(float3(_131, _132, _133), float3(_131, _132, _133)) * -4.0f));
   float _145 = (1.0f - exp2(((_127 * _127) * -4.0f) * 0.f)) * (1.0f - exp2(dot(float3(_131, _132, _133), float3(_131, _132, _133)) * -4.0f));
 
   float _161 = ((mad(-0.06368283927440643f, _126, mad(-0.32929131388664246f, _123, (_120 * 1.370412826538086f))) - _120) * _145) + _120;
