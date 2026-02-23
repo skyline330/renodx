@@ -369,6 +369,24 @@ float4 main(
   float _785 = ((_671 * (((cb0_019x + cb0_034x) + _567) + (((cb0_018x * cb0_033x) * _576) * exp2(log2(exp2(((cb0_016x * cb0_031x) * _594) * log2(max(0.0f, ((((cb0_015x * cb0_030x) * _603) * _494) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017x * cb0_032x) * _585)))))) + (_558 * (((cb0_019x + cb0_024x) + _434) + (((cb0_018x * cb0_023x) * _448) * exp2(log2(exp2(((cb0_016x * cb0_021x) * _476) * log2(max(0.0f, ((((cb0_015x * cb0_020x) * _490) * _494) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017x * cb0_022x) * _462))))))) + ((((cb0_019x + cb0_029x) + _680) + (((cb0_018x * cb0_028x) * _689) * exp2(log2(exp2(((cb0_016x * cb0_026x) * _707) * log2(max(0.0f, ((((cb0_015x * cb0_025x) * _716) * _494) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017x * cb0_027x) * _698))))) * _774);
   float _787 = ((_671 * (((cb0_019y + cb0_034y) + _567) + (((cb0_018y * cb0_033y) * _576) * exp2(log2(exp2(((cb0_016y * cb0_031y) * _594) * log2(max(0.0f, ((((cb0_015y * cb0_030y) * _603) * _495) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017y * cb0_032y) * _585)))))) + (_558 * (((cb0_019y + cb0_024y) + _434) + (((cb0_018y * cb0_023y) * _448) * exp2(log2(exp2(((cb0_016y * cb0_021y) * _476) * log2(max(0.0f, ((((cb0_015y * cb0_020y) * _490) * _495) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017y * cb0_022y) * _462))))))) + ((((cb0_019y + cb0_029y) + _680) + (((cb0_018y * cb0_028y) * _689) * exp2(log2(exp2(((cb0_016y * cb0_026y) * _707) * log2(max(0.0f, ((((cb0_015y * cb0_025y) * _716) * _495) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017y * cb0_027y) * _698))))) * _774);
   float _789 = ((_671 * (((cb0_019z + cb0_034z) + _567) + (((cb0_018z * cb0_033z) * _576) * exp2(log2(exp2(((cb0_016z * cb0_031z) * _594) * log2(max(0.0f, ((((cb0_015z * cb0_030z) * _603) * _496) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017z * cb0_032z) * _585)))))) + (_558 * (((cb0_019z + cb0_024z) + _434) + (((cb0_018z * cb0_023z) * _448) * exp2(log2(exp2(((cb0_016z * cb0_021z) * _476) * log2(max(0.0f, ((((cb0_015z * cb0_020z) * _490) * _496) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017z * cb0_022z) * _462))))))) + ((((cb0_019z + cb0_029z) + _680) + (((cb0_018z * cb0_028z) * _689) * exp2(log2(exp2(((cb0_016z * cb0_026z) * _707) * log2(max(0.0f, ((((cb0_015z * cb0_025z) * _716) * _496) + _420)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_017z * cb0_027z) * _698))))) * _774);
+
+  UECbufferConfig cb_config = CreateCbufferConfig();
+  cb_config.ue_filmblackclip = cb0_037w;
+  cb_config.ue_filmtoe = cb0_037y;
+  cb_config.ue_filmshoulder = cb0_037z;
+  cb_config.ue_filmslope = cb0_037x;
+  cb_config.ue_filmwhiteclip = cb0_038x;
+  cb_config.ue_tonecurveammount = cb0_036w;
+  cb_config.ue_mappingpolynomial = float3(cb0_039x, cb0_039y, cb0_039z);
+  cb_config.ue_overlaycolor = float4(cb0_013x, cb0_013y, cb0_013z, cb0_013w);
+  cb_config.ue_bluecorrection = cb0_036y;
+  cb_config.ue_colorscale = float3(cb0_014x, cb0_014y, cb0_014z);
+  float4 lutweights[2] = { float4(cb0_005x, cb0_005y, 0.f, 0.f), float4(0.f, 0.f, 0.f, 0.f) };
+  cb_config.ue_lutweights = lutweights;  // Only Lutweights[0].xy is used
+
+  SV_Target = ProcessLutbuilder(float3(_785, _787, _789), s0, t0, cb_config, SV_Target, cb0_040w);
+  return SV_Target;
+
   float _825 = ((mad(0.061360642313957214f, _789, mad(-4.540197551250458e-09f, _787, (_785 * 0.9386394023895264f))) - _785) * cb0_036y) + _785;
   float _826 = ((mad(0.169205904006958f, _789, mad(0.8307942152023315f, _787, (_785 * 6.775371730327606e-08f))) - _787) * cb0_036y) + _787;
   float _827 = (mad(-2.3283064365386963e-10f, _787, (_785 * -9.313225746154785e-10f)) * cb0_036y) + _789;
