@@ -1,8 +1,10 @@
 #include "../../tonemap.hlsl"
 
-// Uberpost - version 2.5 - Yixuan Ultimate: Qingming Skyshade
+// Uberpost - version 2.7 - VR Training - Black/white portion of battle intro
 
-// ---- Created with 3Dmigoto v1.4.1 on Mon Dec 29 23:36:21 2025
+// ---- Created with 3Dmigoto v1.4.1 on Tue Mar 24 17:44:46 2026
+Texture2D<float4> t7 : register(t7);
+
 Texture2D<float4> t6 : register(t6);
 
 Texture2D<float4> t5 : register(t5);
@@ -51,7 +53,7 @@ void main(
 
   r0.x = cmp(0 < cb1[11].w);
   if (r0.x != 0) {
-    r0.xyzw = t4.Sample(s2_s, v1.xy).xyzw;
+    r0.xyzw = t5.Sample(s2_s, v1.xy).xyzw;
     r1.xy = float2(0.100000001, 0.100000001) * r0.xy;
     r0.xy = r0.xy * float2(0.100000001, 0.100000001) + v1.xy;
     r0.zw = r1.xy * r0.zz;
@@ -85,17 +87,17 @@ void main(
   r1.xy = r1.xz * r1.yy;
   r1.zw = v1.xy + r2.xy;
   r1.zw = r1.xy * cb1[25].ww + r1.zw;
-  r3.xyzw = t0.Sample(s0_s, r1.zw).xyzw;
+  r3.xyzw = t1.Sample(s0_s, r1.zw).xyzw;
   r1.zw = v1.xy + r2.zw;
   r1.zw = r1.xy * cb1[26].ww + r1.zw;
-  r2.xyzw = t0.Sample(s0_s, r1.zw).xyzw;
+  r2.xyzw = t1.Sample(s0_s, r1.zw).xyzw;
   r0.zw = v1.xy + r0.zw;
   r0.zw = r1.xy * cb1[27].ww + r0.zw;
-  r1.xyzw = t0.Sample(s0_s, r0.zw).xyzw;
+  r1.xyzw = t1.Sample(s0_s, r0.zw).xyzw;
   r1.xyw = cb1[26].xyz * r2.yyy;
   r1.xyw = r3.xxx * cb1[25].xyz + r1.xyw;
-  r1.xyz = r1.zzz * cb1[27].xyz + r1.xyw;
-  r2.xyzw = t0.Sample(s0_s, r0.xy).xyzw;
+  r1.xyz = r1.zzz * cb1[27].zxy + r1.wxy;
+  r2.xyzw = t1.Sample(s0_s, r0.xy).xyzw;
   r0.z = cmp(cb1[21].z < 0.5);
   r2.xy = cmp(float2(0, 0) < cb1[21].xy);
   r0.w = (int)r2.y | (int)r2.x;
@@ -124,7 +126,7 @@ void main(
     r0.z = cmp(0.5 >= r0.z);
     r0.z = r0.z ? 0.999989986 : -1;
     r3.y = cb1[29].z * r0.z + r0.y;
-    r3.xyzw = t5.Sample(s3_s, r3.xy).xyzw;
+    r3.xyzw = t6.Sample(s3_s, r3.xy).xyzw;
     r4.xyz = log2(abs(r3.xyz));
     r4.xyz = float3(0.333333343, 0.333333343, 0.333333343) * r4.xyz;
     r4.xyz = exp2(r4.xyz);
@@ -134,18 +136,18 @@ void main(
     r4.xyz = float3(-0.699999988, -0.699999988, -0.699999988) + r4.xyz;
     r3.xyz = r5.xyz * r4.xyz + r3.xyz;
     r3.xyz = cb1[21].xxx * r3.xyz;
-    r0.z = dot(r1.xyz, float3(0.298999995, 0.587000012, 0.114));
+    r0.z = dot(r1.yzx, float3(0.298999995, 0.587000012, 0.114));
     r0.w = cmp(0.5 < cb1[22].x);
     r4.xyz = r0.zzz * r3.xyz + -r3.xyz;
     r4.xyz = r2.www * r4.xyz + r3.xyz;
     r4.xyz = r0.www ? r4.xyz : r3.xyz;
     if (r2.y != 0) {
       r0.zw = r0.xy * cb1[20].xy + cb1[20].zw;
-      r5.xyzw = t6.Sample(s0_s, r0.zw).xyzw;
+      r5.xyzw = t7.Sample(s0_s, r0.zw).xyzw;
       r2.xyz = cb1[21].yyy * r5.xyz;
       r4.xyz = r2.xyz * r3.xyz + r4.xyz;
     }
-    r1.xyz = r4.xyz + r1.xyz;
+    r1.xyz = r4.zxy + r1.xyz;
     r0.z = r4.x + r4.y;
     r0.z = r0.z + r4.z;
     o0.w = saturate(r0.z * 0.333299994 + r2.w);
@@ -173,46 +175,49 @@ void main(
 
     r0.yzw = float3(1, 1, 1) + -cb1[6].xyz;
     r0.xyz = r0.xxx * r0.yzw + cb1[6].xyz;
-    r1.xyz = r1.xyz * r0.xyz;
+    r1.xyz = r1.xyz * r0.zxy;
   }
 
-  float3 untonemapped = r1.xyz;
-  /*
-  if (injectedData.fxRCASAmount > 0.0f) {
-    untonemapped = ApplyRCAS(untonemapped, v1.xy, t0, s0_s);
-  }
-  */
-  renodx::lut::Config lut_config = renodx::lut::config::Create(
-      s0_s,
-      1.f,
-      0.f,
-      renodx::lut::config::type::ARRI_C1000_NO_CUT,
-      renodx::lut::config::type::LINEAR);
-  r0.xyz = renodx::lut::Sample(t2, lut_config, untonemapped);
+  float3 untonemapped = (r1.yzx);
+  r0.xyz = applyUserToneMap(untonemapped, cb1[0], t3, s0_s);
 
+  // Original lutsampling
   /*
-  r0.xyz = r1.zxy * float3(5.55555582,5.55555582,5.55555582) + float3(0.0479959995,0.0479959995,0.0479959995);
-  r0.xyz = log2(r0.xyz);
-  r0.xyz = saturate(r0.xyz * float3(0.0734997839,0.0734997839,0.0734997839) + float3(0.386036009,0.386036009,0.386036009));
+  r1.xyz = saturate(r1.xyz);
+  r0.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r1.xyz;
+  r2.xyz = log2(r1.xyz);
+  r2.xyz = float3(0.416666657, 0.416666657, 0.416666657) * r2.xyz;
+  r2.xyz = exp2(r2.xyz);
+  r2.xyz = r2.xyz * float3(1.05499995, 1.05499995, 1.05499995) + float3(-0.0549999997, -0.0549999997, -0.0549999997);
+  r1.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r1.xyz);
+  r0.xyz = r1.xyz ? r0.xyz : r2.xyz;
   r0.yzw = cb1[0].zzz * r0.xyz;
   r0.y = floor(r0.y);
-  r1.xy = float2(0.5,0.5) * cb1[0].xy;
+  r1.xy = float2(0.5, 0.5) * cb1[0].xy;
   r1.yz = r0.zw * cb1[0].xy + r1.xy;
   r1.x = r0.y * cb1[0].y + r1.y;
-  r2.xyzw = t2.SampleLevel(s0_s, r1.xz, 0).xyzw;
+  r2.xyzw = t3.SampleLevel(s0_s, r1.xz, 0).xyzw;
   r3.x = cb1[0].y;
   r3.y = 0;
   r0.zw = r3.xy + r1.xz;
-  r1.xyzw = t2.SampleLevel(s0_s, r0.zw, 0).xyzw;
+  r1.xyzw = t3.SampleLevel(s0_s, r0.zw, 0).xyzw;
   r0.x = r0.x * cb1[0].z + -r0.y;
   r0.yzw = r1.xyz + -r2.xyz;
   r0.xyz = r0.xxx * r0.yzw + r2.xyz;
+  r1.xyz = float3(0.0773993805, 0.0773993805, 0.0773993805) * r0.xyz;
+  r2.xyz = float3(0.0549999997, 0.0549999997, 0.0549999997) + r0.xyz;
+  r2.xyz = float3(0.947867334, 0.947867334, 0.947867334) * r2.xyz;
+  r2.xyz = log2(abs(r2.xyz));
+  r2.xyz = float3(2.4000001, 2.4000001, 2.4000001) * r2.xyz;
+  r2.xyz = exp2(r2.xyz);
+  r0.xyz = cmp(float3(0.0404499993, 0.0404499993, 0.0404499993) >= r0.xyz);
+  r0.xyz = r0.xyz ? r1.xyz : r2.xyz;
   */
 
   r0.w = cmp(0 < cb1[13].x);
   if (r0.w != 0) {
     r1.xy = v1.xy * cb1[8].xy + cb1[8].zw;
-    r1.xyzw = t1.Sample(s1_s, r1.xy).xyzw;
+    r1.xyzw = t2.Sample(s1_s, r1.xy).xyzw;
     r0.w = -0.5 + r1.w;
     r0.w = r0.w + r0.w;
     r1.x = dot(r0.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
@@ -227,7 +232,17 @@ void main(
   r1.x = 0.333333343 * r0.w;
   r0.xyz = -r0.www * float3(0.333333343, 0.333333343, 0.333333343) + r0.xyz;
   r0.xyz = r0.xyz * cb2[0].www + r1.xxx;
-  r1.xyz = saturate(r0.xyz);
+  r0.w = cmp(0.5 < cb0[54].w);
+  if (r0.w != 0) {
+    r1.x = dot(r0.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
+    r1.y = 0.5;
+    r1.xyzw = t0.Sample(s0_s, r1.xy).xyzw;
+    r0.xyz = r1.xxx;
+  }
+
+  // r1.xyz = saturate(r0.xyz);
+  r1.xyz = r0.xyz;
+
   r1.xyz = float3(1, 1, 1) + -r1.xyz;
   r1.xyz = r1.xyz + -r0.xyz;
   r0.xyz = cb2[1].www * r1.xyz + r0.xyz;
@@ -237,55 +252,34 @@ void main(
   r1.xyz = cb2[1].xyz + -cb2[0].xyz;
   r1.xyz = r0.www * r1.xyz + cb2[0].xyz;
   r1.xyz = r1.xyz + -r0.xyz;
+
   // r0.xyz = saturate(cb2[2].xxx * r1.xyz + r0.xyz);
   r0.xyz = (cb2[2].xxx * r1.xyz + r0.xyz);
 
-  // HDR FX Mask Blend
-  float3 result = r0.xyz;
   r0.w = cmp(0.5 < cb2[2].w);
   if (r0.w != 0) {
-    r1.xyzw = t3.Sample(s0_s, v1.xy).xyzw;
-    float m = smoothstep(0.0f, 1.0f, r1.x);
+    r1.xyzw = t4.Sample(s0_s, v1.xy).xyzw;
     r0.w = cmp(cb2[3].w < 0.5);
-    if (r0.w != 0) {
-      // Simple lighten (HDR-compatible)
-      float3 blend_factor = pow(m, 2.2f);
-      result = result * (1.0f + blend_factor * 0.5f);
-    } else {
-      // Overlay (HDR-compatible)
-      float3 blend = cb2[3].xyz;
-      result = result * lerp(1.0f, blend * 2.0f, m);
-    }
-  }
-
-  // Original FX Mask Blend
-  /*
-  r0.w = cmp(0.5 < cb2[2].w);
-  if (r0.w != 0) {
-    r1.xyzw = t3.Sample(s0_s, v1.xy).xyzw;
     r1.yzw = r1.xxx + r0.xyz;
-    r1.yzw = min(float3(1,1,1), r1.yzw);
+    r1.yzw = min(float3(1, 1, 1), r1.yzw);
     r2.xyz = cb2[3].xyz * r0.xyz;
     r2.xyz = r2.xyz + r2.xyz;
-    r3.xyz = float3(1,1,1) + -r0.xyz;
+    r3.xyz = float3(1, 1, 1) + -r0.xyz;
     r3.xyz = r3.xyz + r3.xyz;
-    r4.xyz = float3(1,1,1) + -cb2[3].xyz;
-    r3.xyz = -r3.xyz * r4.xyz + float3(1,1,1);
-    r4.xyz = cmp(float3(0.5,0.5,0.5) >= r0.xyz);
-    r5.xyz = r4.xyz ? float3(1,1,1) : 0;
-    r4.xyz = r4.xyz ? float3(0,0,0) : float3(1,1,1);
+    r4.xyz = float3(1, 1, 1) + -cb2[3].xyz;
+    r3.xyz = -r3.xyz * r4.xyz + float3(1, 1, 1);
+    r4.xyz = cmp(float3(0.5, 0.5, 0.5) >= r0.xyz);
+    r5.xyz = r4.xyz ? float3(1, 1, 1) : 0;
+    r4.xyz = r4.xyz ? float3(0, 0, 0) : float3(1, 1, 1);
     r3.xyz = r4.xyz * r3.xyz;
     r2.xyz = r5.xyz * r2.xyz + r3.xyz;
     r2.w = 1 + -r1.x;
     r2.xyz = r2.xyz * r1.xxx;
     r2.xyz = r2.www * r0.xyz + r2.xyz;
     o0.xyz = r0.www ? r1.yzw : r2.xyz;
-} else {
-  o0.xyz = r0.xyz;
-}
-*/
-
-  o0.xyz = result;
+  } else {
+    o0.xyz = r0.xyz;
+  }
 
   o0.xyz *= vignette_value;  // Apply vignette after tonemapping
 

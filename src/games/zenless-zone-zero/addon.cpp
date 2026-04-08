@@ -16,9 +16,9 @@
 
 #include "../../mods/shader.hpp"
 #include "../../mods/swapchain.hpp"
+#include "../../utils/random.hpp"
 #include "../../utils/settings.hpp"
 #include "./shared.h"
-#include "../../utils/random.hpp"
 
 namespace {
 
@@ -233,10 +233,10 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .parse = [](float value) { return value * 0.01f; },
     },
-        new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "fxVignetteStrength",
         .binding = &shader_injection.fxVignetteStrength,
-        .default_value = 50.f,
+        .default_value = 0.f,
         .label = "Vignette Strength",
         .section = "Effects",
         .tooltip = "Adjusts vignette strength."
@@ -245,7 +245,7 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .parse = [](float value) { return value * 0.01f; },
     },
-        new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "fxRCASAmount",
         .binding = &shader_injection.fxRCASAmount,
         .default_value = 50.f,
@@ -319,7 +319,7 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.toneMapType >= 1; },
         .parse = [](float value) { return value - 1.f; },
     },
-        new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
         .label = "Reset All",
         .section = "Presets",
@@ -342,7 +342,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = "RenoDX by ShortFuse, game mod by Maple."
-                 "\nMaintained by Spiwar and Nick.",
+                 "\nMaintained by Nick.",
         .section = "About",
     },
     new renodx::utils::settings::Setting{
@@ -368,6 +368,24 @@ renodx::utils::settings::Settings settings = {
         .group = "button-line-1",
         .on_change = []() {
           ShellExecute(0, "open", "https://github.com/clshortfuse/renodx", 0, 0, SW_SHOW);
+        },
+    },
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Nick's Ko-fi",
+        .section = "About",
+        .group = "button-line-2",
+        .on_change = []() {
+          ShellExecute(0, "open", "https://ko-fi.com/vietnick", 0, 0, SW_SHOW);
+        },
+    },
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Nick's Steam Wishlist",
+        .section = "About",
+        .group = "button-line-2",
+        .on_change = []() {
+          ShellExecute(0, "open", "https://store.steampowered.com/wishlist/id/skyline330/?sort=discount", 0, 0, SW_SHOW);
         },
     },
     new renodx::utils::settings::Setting{
@@ -493,14 +511,14 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .new_format = reshade::api::format::r16g16b16a16_float,
           .ignore_size = true,
       });
-      
+
       //  R11G11B10_float resources - Main game
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r11g11b10_float,
           .new_format = reshade::api::format::r16g16b16a16_float,
-        //   .ignore_size = true,
+          //   .ignore_size = true,
       });
-      
+
       {
         auto* setting = new renodx::utils::settings::Setting{
             .key = "swapChainEncoding",
@@ -527,10 +545,10 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       }
 
       reshade::register_event<reshade::addon_event::init_device>(OnInitDevice);
-      
+
       // peak nits
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
-      
+
       break;
     }
     case DLL_PROCESS_DETACH:

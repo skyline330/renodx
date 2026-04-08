@@ -23,54 +23,47 @@ SamplerState s1_s : register(s1);
 
 SamplerState s0_s : register(s0);
 
-cbuffer cb1 : register(b1)
-{
+cbuffer cb1 : register(b1) {
   float4 cb1[30];
 }
 
-cbuffer cb0 : register(b0)
-{
+cbuffer cb0 : register(b0) {
   float4 cb0[138];
 }
-
-
-
 
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_POSITION0,
-  float4 v1 : TEXCOORD0,
-  float4 v2 : TEXCOORD1,
-  out float4 o0 : SV_Target0)
-{
-  float4 r0,r1,r2,r3,r4,r5;
+    float4 v0: SV_POSITION0,
+    float4 v1: TEXCOORD0,
+    float4 v2: TEXCOORD1,
+    out float4 o0: SV_Target0) {
+  float4 r0, r1, r2, r3, r4, r5;
   uint4 bitmask, uiDest;
   float4 fDest;
 
   r0.x = cmp(0 < cb1[11].w);
   if (r0.x != 0) {
     r0.xyzw = t3.Sample(s2_s, v1.xy).xyzw;
-    r1.xy = float2(0.100000001,0.100000001) * r0.xy;
-    r0.xy = r0.xy * float2(0.100000001,0.100000001) + v1.xy;
+    r1.xy = float2(0.100000001, 0.100000001) * r0.xy;
+    r0.xy = r0.xy * float2(0.100000001, 0.100000001) + v1.xy;
     r0.zw = r1.xy * r0.zz;
     r0.zw = cb1[11].ww * r0.zw;
     r2.xyzw = r0.zwzw * cb1[11].xxyy + r1.xyxy;
     r0.zw = r0.zw * cb1[11].zz + r1.xy;
   } else {
     r0.xy = v1.xy;
-    r2.xyzw = float4(0,0,0,0);
-    r0.zw = float2(0,0);
+    r2.xyzw = float4(0, 0, 0, 0);
+    r0.zw = float2(0, 0);
   }
-  r1.xy = v1.xy * float2(2,2) + float2(-1,-1);
-  r1.zw = float2(-0.5,-0.5) + cb1[24].xy;
+  r1.xy = v1.xy * float2(2, 2) + float2(-1, -1);
+  r1.zw = float2(-0.5, -0.5) + cb1[24].xy;
   r1.xy = r1.xy + -r1.zw;
   r1.z = dot(r1.xy, r1.xy);
   r1.xy = r1.xy * r1.zz;
   r1.xy = cb1[12].zz * r1.xy;
-  r1.xy = float2(-0.333333343,-0.333333343) * r1.xy;
+  r1.xy = float2(-0.333333343, -0.333333343) * r1.xy;
   r1.z = 9.99999975e-05;
   r1.z = dot(r1.xyz, r1.xyz);
   r1.z = rsqrt(r1.z);
@@ -99,7 +92,7 @@ void main(
   r1.xyz = r1.zzz * cb1[27].xyz + r1.xyw;
   r2.xyzw = t0.Sample(s0_s, r0.xy).xyzw;
   r0.z = cmp(cb1[21].z < 0.5);
-  r2.xy = cmp(float2(0,0) < cb1[21].xy);
+  r2.xy = cmp(float2(0, 0) < cb1[21].xy);
   r0.w = (int)r2.y | (int)r2.x;
   r0.z = r0.z ? r0.w : 0;
   if (r0.z != 0) {
@@ -107,7 +100,7 @@ void main(
     r0.z = cb1[28].x * r0.z;
     r0.w = r0.z + r0.z;
     r0.w = cmp(r0.w >= -r0.w);
-    r2.xz = r0.ww ? float2(2,0.5) : float2(-2,-0.5);
+    r2.xz = r0.ww ? float2(2, 0.5) : float2(-2, -0.5);
     r0.z = r2.z * r0.z;
     r0.z = frac(r0.z);
     r0.w = r2.x * r0.z;
@@ -128,15 +121,15 @@ void main(
     r3.y = cb1[29].z * r0.z + r0.y;
     r3.xyzw = t4.Sample(s3_s, r3.xy).xyzw;
     r4.xyz = log2(abs(r3.xyz));
-    r4.xyz = float3(0.333333343,0.333333343,0.333333343) * r4.xyz;
+    r4.xyz = float3(0.333333343, 0.333333343, 0.333333343) * r4.xyz;
     r4.xyz = exp2(r4.xyz);
-    r4.xyz = r4.xyz * float3(1.49380159,1.49380159,1.49380159) + -r3.xyz;
-    r5.xyz = cmp(r3.xyz >= float3(0.300000012,0.300000012,0.300000012));
-    r5.xyz = r5.xyz ? float3(1,1,1) : 0;
-    r4.xyz = float3(-0.699999988,-0.699999988,-0.699999988) + r4.xyz;
+    r4.xyz = r4.xyz * float3(1.49380159, 1.49380159, 1.49380159) + -r3.xyz;
+    r5.xyz = cmp(r3.xyz >= float3(0.300000012, 0.300000012, 0.300000012));
+    r5.xyz = r5.xyz ? float3(1, 1, 1) : 0;
+    r4.xyz = float3(-0.699999988, -0.699999988, -0.699999988) + r4.xyz;
     r3.xyz = r5.xyz * r4.xyz + r3.xyz;
     r3.xyz = cb1[21].xxx * r3.xyz;
-    r0.z = dot(r1.xyz, float3(0.298999995,0.587000012,0.114));
+    r0.z = dot(r1.xyz, float3(0.298999995, 0.587000012, 0.114));
     r0.w = cmp(0.5 < cb1[22].x);
     r4.xyz = r0.zzz * r3.xyz + -r3.xyz;
     r4.xyz = r2.www * r4.xyz + r3.xyz;
@@ -171,9 +164,9 @@ void main(
     r0.x = cb1[7].w * r0.x;
     r0.x = exp2(r0.x);
 
-    r0.x = 1.0; // Disable original vignette and apply after tonemapping
+    r0.x = 1.0;  // Disable original vignette and apply after tonemapping
 
-    r0.yzw = float3(1,1,1) + -cb1[6].xyz;
+    r0.yzw = float3(1, 1, 1) + -cb1[6].xyz;
     r0.xyz = r0.xxx * r0.yzw + cb1[6].xyz;
     r1.xyz = r1.xyz * r0.xyz;
   }
@@ -218,7 +211,7 @@ void main(
     r1.xyzw = t1.Sample(s1_s, r1.xy).xyzw;
     r0.w = -0.5 + r1.w;
     r0.w = r0.w + r0.w;
-    r1.x = dot(r0.xyz, float3(0.212672904,0.715152204,0.0721750036));
+    r1.x = dot(r0.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
     r1.x = sqrt(r1.x);
     r1.x = cb1[13].y * -r1.x + 1;
     r1.yzw = r0.xyz * r0.www;
@@ -229,7 +222,7 @@ void main(
 
   o0.xyz = r0.xyz;
 
-  o0.xyz *= vignette_value; // Apply vignette after tonemapping
+  o0.xyz *= vignette_value;  // Apply vignette after tonemapping
 
   if (injectedData.fxFilmGrainAmount > 0.0f) {
     o0.xyz = applyFilmGrain(o0.xyz, v1.xy);

@@ -1,8 +1,8 @@
 #include "../../tonemap.hlsl"
 
-// Uberpost - version 2.5 - Trigger Aftershock (Open World)
+// Uberpost - version 2.7 - VR Training - Aftershock (Yuzuha)
 
-// ---- Created with 3Dmigoto v1.4.1 on Tue Dec 30 00:42:53 2025
+// ---- Created with 3Dmigoto v1.4.1 on Thu Mar 26 20:59:52 2026
 Texture2D<float4> t5 : register(t5);
 
 Texture2D<float4> t4 : register(t4);
@@ -250,7 +250,7 @@ void main(
   r0.xyzw = t0.Sample(s0_s, r0.yz).xyzw;
   r0.xyw = cb1[26].xyz * r2.yyy;
   r0.xyw = r3.xxx * cb1[25].xyz + r0.xyw;
-  r0.xyz = r0.zzz * cb1[27].xyz + r0.xyw;
+  r0.xyz = r0.zzz * cb1[27].zxy + r0.wxy;
   r2.xyzw = t0.Sample(s0_s, r1.zw).xyzw;
   r0.w = cmp(cb1[21].z < 0.5);
   r1.xy = cmp(float2(0, 0) < cb1[21].xy);
@@ -290,7 +290,7 @@ void main(
     r2.xyz = float3(-0.699999988, -0.699999988, -0.699999988) + r2.xyz;
     r2.xyz = r4.xyz * r2.xyz + r3.xyz;
     r2.xyz = cb1[21].xxx * r2.xyz;
-    r0.w = dot(r0.xyz, float3(0.298999995, 0.587000012, 0.114));
+    r0.w = dot(r0.yzx, float3(0.298999995, 0.587000012, 0.114));
     r1.x = cmp(0.5 < cb1[22].x);
     r3.xyz = r0.www * r2.xyz + -r2.xyz;
     r3.xyz = r2.www * r3.xyz + r2.xyz;
@@ -301,7 +301,7 @@ void main(
       r4.xyz = cb1[21].yyy * r4.xyz;
       r3.xyz = r4.xyz * r2.xyz + r3.xyz;
     }
-    r0.xyz = r3.xyz + r0.xyz;
+    r0.xyz = r3.zxy + r0.xyz;
     r0.w = r3.x + r3.y;
     r0.w = r0.w + r3.z;
     o0.w = saturate(r0.w * 0.333299994 + r2.w);
@@ -329,31 +329,29 @@ void main(
 
     r1.xyz = float3(1, 1, 1) + -cb1[6].xyz;
     r1.xyz = r0.www * r1.xyz + cb1[6].xyz;
-    r0.xyz = r1.xyz * r0.xyz;
+    r0.xyz = r1.zxy * r0.xyz;
   }
 
-  float3 untonemapped = (r0.xyz);
+  float3 untonemapped = r0.yzx;
   /*
   if (injectedData.fxRCASAmount > 0.0f) {
     untonemapped = ApplyRCAS(untonemapped, v1.xy, t0, s0_s);
   }
   */
-  renodx::lut::Config lut_config = renodx::lut::config::Create(
-      s0_s,
-      1.f,
-      0.f,
-      renodx::lut::config::type::ARRI_C1000_NO_CUT,
-      renodx::lut::config::type::LINEAR);
-
-  r0.xyz = renodx::lut::Sample(t2, lut_config, untonemapped);
+  r0.xyz = applyUserToneMap(untonemapped, cb1[0], t2, s0_s);
 
   /*
-  r0.xyz = r0.zxy * float3(5.55555582,5.55555582,5.55555582) + float3(0.0479959995,0.0479959995,0.0479959995);
-  r0.xyz = log2(r0.xyz);
-  r0.xyz = saturate(r0.xyz * float3(0.0734997839,0.0734997839,0.0734997839) + float3(0.386036009,0.386036009,0.386036009));
+  r0.xyz = saturate(r0.xyz);
+  r1.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r0.xyz;
+  r2.xyz = log2(r0.xyz);
+  r2.xyz = float3(0.416666657, 0.416666657, 0.416666657) * r2.xyz;
+  r2.xyz = exp2(r2.xyz);
+  r2.xyz = r2.xyz * float3(1.05499995, 1.05499995, 1.05499995) + float3(-0.0549999997, -0.0549999997, -0.0549999997);
+  r0.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r0.xyz);
+  r0.xyz = r0.xyz ? r1.xyz : r2.xyz;
   r0.yzw = cb1[0].zzz * r0.xyz;
   r0.y = floor(r0.y);
-  r1.xy = float2(0.5,0.5) * cb1[0].xy;
+  r1.xy = float2(0.5, 0.5) * cb1[0].xy;
   r1.yz = r0.zw * cb1[0].xy + r1.xy;
   r1.x = r0.y * cb1[0].y + r1.y;
   r2.xyzw = t2.SampleLevel(s0_s, r1.xz, 0).xyzw;
@@ -364,6 +362,14 @@ void main(
   r0.x = r0.x * cb1[0].z + -r0.y;
   r0.yzw = r1.xyz + -r2.xyz;
   r0.xyz = r0.xxx * r0.yzw + r2.xyz;
+  r1.xyz = float3(0.0773993805, 0.0773993805, 0.0773993805) * r0.xyz;
+  r2.xyz = float3(0.0549999997, 0.0549999997, 0.0549999997) + r0.xyz;
+  r2.xyz = float3(0.947867334, 0.947867334, 0.947867334) * r2.xyz;
+  r2.xyz = log2(abs(r2.xyz));
+  r2.xyz = float3(2.4000001, 2.4000001, 2.4000001) * r2.xyz;
+  r2.xyz = exp2(r2.xyz);
+  r0.xyz = cmp(float3(0.0404499993, 0.0404499993, 0.0404499993) >= r0.xyz);
+  r0.xyz = r0.xyz ? r1.xyz : r2.xyz;
   */
 
   r0.w = cmp(0 < cb1[13].x);
