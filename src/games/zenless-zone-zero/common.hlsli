@@ -217,7 +217,7 @@ float3 ApplyCustomGrading(float3 ungraded_bt709) {
     0.10f * pow(RENODX_TONE_MAP_FLARE, 10.f),             // float flare;
     1.f,                                                  // float gamma;
     RENODX_TONE_MAP_SATURATION,                           // float saturation;
-    RENODX_TONE_MAP_DECHROMA,                             // float dechroma;
+    0.f,                                                  // float dechroma;
     -1.f * (RENODX_TONE_MAP_HIGHLIGHT_SATURATION - 1.f),  // float highlight_saturation;
     RENODX_TONE_MAP_HUE_SHIFT,                            // float hue_emulation;
     RENODX_TONE_MAP_BLOWOUT                               // float chrominance_emulation;
@@ -277,6 +277,141 @@ float3 LutSample(float3 color, float4 lut_params, Texture2D lut_texture, Sampler
   color = renodx::lut::Sample(lut_texture, lut_config, color);
   color = lerp(lut_input_color, color, RENODX_COLOR_GRADE_LUT_STRENGTH);
   return color;
+}
+
+float3 HighQualityBloomLutSample(float3 color_lut_input, Texture2D<float4> lut_texture, SamplerState lut_sample) {
+  // Start of ARRI C3 1000 LUT
+  renodx::lut::Config lut_config = renodx::lut::config::Create(
+      lut_sample,
+      1.f,
+      0.f,
+      renodx::lut::config::type::ARRI_C1000_NO_CUT,
+      renodx::lut::config::type::LINEAR);
+
+  float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input);
+  float3 color_lut_input_tonemapped = (color_lut_input * scale);  // Tonemap input MaxCh to 1
+  float3 lutted = renodx::lut::Sample(lut_texture, lut_config, color_lut_input_tonemapped);
+  float3 lutted_inversed = (lutted / scale);  // Inverse scale
+  float3 color_output = lerp(color_lut_input, lutted_inversed, saturate(RENODX_COLOR_GRADE_LUT_STRENGTH));
+
+  return color_output;
+}
+
+float3 UberpostArriLutSample(float3 color_lut_input, Texture2D<float4> lut_texture, SamplerState lut_sample) {
+  color_lut_input = max(0, color_lut_input);
+
+  float3 hdr_color = color_lut_input;
+  float3 hdr_color_tm = renodx::tonemap::neutwo::ComputeMaxChannelScale(hdr_color);
+  if (RENODX_TONE_MAP_TYPE > 0) {
+    // color_lut_input = (hdr_color * hdr_color_tm);
+  }
+
+  renodx::lut::Config lut_config = renodx::lut::config::Create(
+      lut_sample,
+      1.f,
+      0.f,
+      renodx::lut::config::type::ARRI_C1000_NO_CUT,
+      renodx::lut::config::type::LINEAR);
+
+  return renodx::lut::Sample(
+      lut_texture,
+      lut_config,
+      color_lut_input);
+}
+
+float3 UberpostSrgbLutSample(float3 color_lut_input, float4 lut_params, Texture2D<float4> lut_texture, SamplerState lut_sample) {
+  color_lut_input = max(0, color_lut_input);
+
+  float3 hdr_color = color_lut_input;
+  float3 hdr_color_tm = renodx::tonemap::neutwo::ComputeMaxChannelScale(hdr_color);
+  if (RENODX_TONE_MAP_TYPE > 0) {
+    // color_lut_input = (hdr_color * hdr_color_tm);
+  }
+
+  bool useSDRLut = (lut_params.w > 0.0f);
+
+  renodx::lut::Config lut_config = renodx::lut::config::Create(
+      lut_sample,
+      useSDRLut ? lut_params.w * RENODX_COLOR_GRADE_LUT_STRENGTH : 0,
+      RENODX_COLOR_GRADE_LUT_SCALING,
+      renodx::lut::config::type::SRGB,
+      renodx::lut::config::type::SRGB);
+
+  return renodx::lut::Sample(
+      lut_texture,
+      lut_config,
+      color_lut_input);
+}
+
+float3 ProcessBloom(float3 color) {
+  if (RENODX_TONE_MAP_TYPE > 0) {
+    color = lerp(0.f, color, CUSTOM_BLOOM);
+  } else {
+    color = saturate(color);
+  }
+  return color;
+}
+
+float3 ApplyPsychoV17(float3 untonemapped_bt709) {
+  float3 bt709_scene = untonemapped_bt709 * RENODX_TONE_MAP_EXPOSURE;
+
+  float3 lms_in = renodx::color::lms::from::BT709(bt709_scene);
+  float yf_input = renodx::color::yf::from::LMS(lms_in);
+  float yf_midgray = renodx::color::yf::from::BT709(0.18f);
+  float yf_target = yf_input;
+
+  if (RENODX_TONE_MAP_HIGHLIGHTS != 1.f) {
+    yf_target = renodx::color::grade::Highlights(yf_target, RENODX_TONE_MAP_HIGHLIGHTS, yf_midgray);
+  }
+  if (RENODX_TONE_MAP_SHADOWS != 1.f) {
+    yf_target = renodx::color::grade::Shadows(yf_target, RENODX_TONE_MAP_SHADOWS, yf_midgray);
+  }
+  if (RENODX_TONE_MAP_CONTRAST != 1.f) {
+    yf_target = renodx::color::grade::ContrastSafe(yf_target, RENODX_TONE_MAP_CONTRAST, yf_midgray);
+  }
+
+  float yf_scale = renodx::math::DivideSafe(yf_target, yf_input, 1.f);
+  bt709_scene *= yf_scale;
+
+  return renodx::tonemap::psychov::psychotm_test17(
+      bt709_scene,
+      (RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS),
+      1.f,
+      1.f,
+      1.f,
+      1.f,
+      RENODX_TONE_MAP_SATURATION,
+      RENODX_TONE_MAP_BLOWOUT,
+      100.f,
+      1.f,
+      1.f,
+      1,
+      max(0.f, CUSTOM_CONE_RESPONSE),
+      0.18f.xxx,
+      0.18f.xxx,
+      1.f,
+      1);
+}
+
+float3 ApplyOutputToneMap(float3 untonemapped_bt709, float2 texcoord) {
+  float3 output_color;
+  if (RENODX_TONE_MAP_TYPE == 0.f) {
+    output_color = saturate(untonemapped_bt709);
+  } else {
+    output_color = renodx::draw::ToneMapPass(untonemapped_bt709);
+    if (RENODX_TONE_MAP_TYPE == RENODX_TONE_MAP_TYPE_PSYCHOV17) {
+      output_color = ApplyPsychoV17(untonemapped_bt709);
+    }
+    if (CUSTOM_FILM_GRAIN != 0) {
+      output_color = renodx::effects::ApplyFilmGrain(
+          output_color,
+          texcoord,
+          CUSTOM_RANDOM,
+          CUSTOM_FILM_GRAIN * 0.03f,
+          1.f);
+    }
+  }
+  return output_color;
 }
 
 float3 ApplyDisplayMap(float3 untonemapped) {

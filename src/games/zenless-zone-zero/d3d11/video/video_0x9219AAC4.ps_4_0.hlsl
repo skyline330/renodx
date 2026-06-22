@@ -42,7 +42,7 @@ void main(
   r1.z = dot(float2(1.16437995, 2.01723003), r0.xy);
 
   /*
-  // sxyz to Linear
+  // srgb to Linear
   r0.xyz = float3(0.0549999997,0.0549999997,0.0549999997) + r1.xyz;
   r0.xyz = float3(0.947867334,0.947867334,0.947867334) * r0.xyz;
   r0.xyz = log2(abs(r0.xyz));

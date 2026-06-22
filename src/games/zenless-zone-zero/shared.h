@@ -10,6 +10,7 @@
 #define RENODX_TONE_MAP_TYPE                   shader_injection.tone_map_type
 #define RENODX_TONE_MAP_HUE_SHIFT              0.f  // shader_injection.tone_map_hue_shift
 #define RENODX_GAMMA_CORRECTION                shader_injection.gamma_correction
+#define RENODX_TONE_MAP_HUE_PROCESSOR          shader_injection.tone_map_hue_processor
 #define RENODX_TONE_MAP_EXPOSURE               shader_injection.tone_map_exposure
 #define RENODX_TONE_MAP_HIGHLIGHTS             shader_injection.tone_map_highlights
 #define RENODX_TONE_MAP_SHADOWS                shader_injection.tone_map_shadows
@@ -26,6 +27,20 @@
 #define RENODX_SWAP_CHAIN_ENCODING             shader_injection.swap_chain_encoding
 #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE shader_injection.swap_chain_encoding_color_space
 
+#define RENODX_RENO_DRT_TONE_MAP_METHOD               renodx::tonemap::renodrt::config::tone_map_method::NEUTWO
+#define RENODX_RENO_DRT_WHITE_CLIP                    shader_injection.tone_map_white_clip
+#define RENODX_RENO_DRT_NEUTRAL_SDR_CLAMP_PEAK        -1.f
+#define RENODX_RENO_DRT_NEUTRAL_SDR_CLAMP_COLOR_SPACE -1.f
+#define RENODX_RENO_DRT_NEUTRAL_SDR_TONE_MAP_METHOD   renodx::tonemap::renodrt::config::tone_map_method::NEUTWO
+#define RENODX_RENO_DRT_NEUTRAL_SDR_WHITE_CLIP        20.f
+#define CUSTOM_CONE_RESPONSE                          shader_injection.custom_cone_response
+#define RENODX_RENO_DRT_SCALING_METHOD                renodx::tonemap::renodrt::config::scaling_method::MAX_CHANNEL
+#define RENODX_TONE_MAP_WORKING_COLOR_SPACE           0.f
+
+#define RENODX_TONE_MAP_TYPE_VANILLA   0.f
+#define RENODX_TONE_MAP_TYPE_RENODRT   3.f
+#define RENODX_TONE_MAP_TYPE_PSYCHOV17 4.f
+
 #define CUSTOM_BLOOM              shader_injection.custom_bloom
 #define CUSTOM_VIGNETTE           shader_injection.custom_vignette
 #define CUSTOM_FILM_GRAIN         shader_injection.custom_film_grain
@@ -41,21 +56,19 @@ struct ShaderInjectData {
   float diffuse_white_nits;
   float graphics_white_nits;
   float color_grade_strength;
-
   float tone_map_type;
   float tone_map_exposure;
   float tone_map_highlights;
   float tone_map_shadows;
-
   float tone_map_contrast;
   float tone_map_saturation;
   float tone_map_highlight_saturation;
   float tone_map_blowout;
-  float tone_map_dechroma;
-
   float tone_map_flare;
-  float tone_map_hue_shift;
+  float tone_map_white_clip;
+  float tone_map_hue_processor;
   float gamma_correction;
+
   float swap_chain_encoding;
   float swap_chain_encoding_color_space;
   float swap_chain_custom_color_space;
@@ -71,6 +84,7 @@ struct ShaderInjectData {
   float custom_film_grain;
   float custom_random;
   float custom_vignette;
+  float custom_cone_response;
 
   float tone_map_video_nits;
   float tone_map_hdr_video;
