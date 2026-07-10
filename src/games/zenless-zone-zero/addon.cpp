@@ -533,7 +533,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       //  RG11B10_float (UAV stuff)
       renodx::mods::swapchain::resource_upgrade_infos.push_back({
           .old_format = reshade::api::format::r11g11b10_float,
-          .new_format = reshade::api::format::r16g16b16a16_float,
+          .new_format = reshade::api::format::r16g16b16a16_typeless,
           // .ignore_size = true,
           .use_resource_view_cloning = true,
           .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::unordered_access,
@@ -547,6 +547,16 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           // .aspect_ratio_tolerance = 0.02f,
           .ignore_size = true,
       });
+      /*
+      //  R8G8B8A8_unorm resources - VR Training lut
+      renodx::mods::swapchain::resource_upgrade_infos.push_back({
+          .old_format = reshade::api::format::r8g8b8a8_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_typeless,
+          .use_resource_view_cloning = true,
+          .dimensions = {.height = 64},
+          .usage_include = reshade::api::resource_usage::render_target,
+      });
+      */
       /*
       //  R10G10B10A2_UNORM
       renodx::mods::swapchain::resource_upgrade_infos.push_back({

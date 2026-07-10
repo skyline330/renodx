@@ -279,6 +279,8 @@ void main(
     r1.xyz = r0.xzw * r0.yyy + r1.xyz;
   }
 
+  r1.xyz = ApplyOutputToneMap(r1.xyz, v1.xy);
+
   r0.x = r1.x + r1.y;
   r0.x = r0.x + r1.z;
   r0.y = 0.333333343 * r0.x;
@@ -352,7 +354,6 @@ void main(
     }
   }
 
-  o0.xyz = ApplyOutputToneMap(o0.xyz, v1.xy);
   o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
   return;

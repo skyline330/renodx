@@ -314,8 +314,21 @@ void main(
   r0.x = r0.w ? r0.x : 0;
   r3.z = r0.x * r1.w + r1.y;
 
+  float3 color_lut_input = r0.xyz;
+
   if (RENODX_TONE_MAP_TYPE > 0) {
-    r0.xyz = lerp(r0.xyz, renodx::lut::Sample(t1, lut_config, saturate(r0.xyz)), lut_config.strength);
+    float gamut_compression_scale = 1.f;
+    float3 color_lut_input_compressed = ComputeGamutCompressionScaleAndCompress(color_lut_input, gamut_compression_scale);
+    float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input_compressed);
+    float3 color_lut_input_tonemapped = (color_lut_input_compressed * scale);  // Tonemap input MaxCh to 1
+    float3 lutted = renodx::lut::Sample(t1, lut_config, color_lut_input_tonemapped);
+    float3 lutted_decompressed = GamutDecompress(lutted, gamut_compression_scale);
+    float3 lutted_inversed = (lutted_decompressed / scale);  // Inverse scale
+    float3 color_output = lerp(color_lut_input, lutted_inversed, saturate(RENODX_COLOR_GRADE_LUT_STRENGTH));
+
+    r0.xyz = color_output;
+
+    // r0.xyz = lerp(r0.xyz, renodx::lut::Sample(t1, lut_config, saturate(r0.xyz)), lut_config.strength);
   } else {
     // Original LUT Sampling
     r0.x = cmp(0 < cb0[171].w);

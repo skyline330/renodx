@@ -376,7 +376,6 @@ void main(
   // o0.xyz = saturate(r1.xyz);
   o0.xyz = (r1.xyz);
 
-  o0.xyz = ApplyOutputToneMap(o0.xyz, v1.xy);
   o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
   return;

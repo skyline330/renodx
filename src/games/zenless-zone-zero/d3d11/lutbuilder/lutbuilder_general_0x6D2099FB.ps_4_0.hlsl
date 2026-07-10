@@ -58,6 +58,8 @@ void main(
   r0.xyz = exp2(r0.xyz);
   r0.xyz = float3(-0.0479959995, -0.0479959995, -0.0479959995) + r0.xyz;
   r0.xyz = float3(0.179999992, 0.179999992, 0.179999992) * r0.xyz;
+
+  // White balance
   r1.x = dot(float3(0.390404999, 0.549941003, 0.00892631989), r0.xyz);
   r1.y = dot(float3(0.070841603, 0.963172019, 0.00135775004), r0.xyz);
   r1.z = dot(float3(0.0231081992, 0.128021002, 0.936245024), r0.xyz);
@@ -72,9 +74,13 @@ void main(
   r0.xyz = float3(13.6054821, 13.6054821, 13.6054821) * r0.xyz;
   r0.xyz = exp2(r0.xyz);
   r0.xyz = float3(-0.0479959995, -0.0479959995, -0.0479959995) + r0.xyz;
+
+  // Color filter
   r0.xyz = cb0[176].xyz * r0.xyz;
   r0.xyz = float3(0.179999992, 0.179999992, 0.179999992) * r0.xyz;
   r0.xyz = max(float3(0, 0, 0), r0.xyz);
+
+  // Split toning
   r0.xyz = log2(r0.xyz);
   r0.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r0.xyz;
   r0.xyz = exp2(r0.xyz);
@@ -119,9 +125,13 @@ void main(
   r0.xyz = log2(abs(r0.xyz));
   r0.xyz = float3(2.20000005, 2.20000005, 2.20000005) * r0.xyz;
   r0.xyz = exp2(r0.xyz);
+
+  // Channel mixing
   r1.x = dot(r0.xyz, cb0[177].xyz);
   r1.y = dot(r0.xyz, cb0[178].xyz);
   r1.z = dot(r0.xyz, cb0[179].xyz);
+
+  // Shadows, midtones and highlights
   r0.x = dot(r1.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
   r0.yz = cb0[187].yw + -cb0[187].xz;
   r0.xw = -cb0[187].xz + r0.xx;
@@ -139,6 +149,8 @@ void main(
   r0.xyz = r2.xyz * r0.xxx + r0.yzw;
   r1.xyz = cb0[186].xyz * r1.xyz;
   r0.xyz = r1.xyz * r1.www + r0.xyz;
+
+  // Lift, gamma, gain
   r0.xyz = r0.xyz * cb0[183].xyz + cb0[181].xyz;
   r1.xyz = cmp(float3(0, 0, 0) < r0.xyz);
   r2.xyz = cmp(r0.xyz < float3(0, 0, 0));
@@ -148,6 +160,8 @@ void main(
   r0.xyz = cb0[182].xyz * r0.xyz;
   r0.xyz = exp2(r0.xyz);
   r2.xyz = r1.xyz * r0.xyz;
+
+  // HSV
   r0.x = cmp(r2.y >= r2.z);
   r0.x = r0.x ? 1.000000 : 0;
   r3.xy = r2.zy;
@@ -192,6 +206,8 @@ void main(
   r0.w = cmp(1 < r1.x);
   r0.w = r0.w ? r1.z : r1.x;
   r0.z = r0.z ? r1.y : r0.w;
+
+  // HSV to RGB
   r1.xyz = float3(1, 0.666666687, 0.333333343) + r0.zzz;
   r1.xyz = frac(r1.xyz);
   r1.xyz = r1.xyz * float3(6, 6, 6) + float3(-3, -3, -3);
@@ -199,6 +215,8 @@ void main(
   r1.xyz = float3(-1, -1, -1) + r1.xyz;
   r1.xyz = r3.zzz * r1.xyz + float3(1, 1, 1);
   r2.xyz = r1.xyz * r0.xxx;
+
+  // Global saturation
   r0.z = dot(r2.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
   r0.w = cmp(0.5 < cb0[196].w);
   r1.w = saturate(r0.z);
@@ -211,10 +229,14 @@ void main(
   r0.y = dot(cb0[180].yy, r0.yy);
   r1.xyz = r0.xxx * r1.xyz + -r0.zzz;
   r0.xyz = r0.yyy * r1.xyz + r0.zzz;
+
   r0.xyz = max(float3(0, 0, 0), r0.xyz);
+
+  // Lut shaper
   r1.xyz = r0.zxy * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
   r1.xyz = log2(r1.xyz);
   r1.xyz = r1.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009);
+
   r1.xyz = min(float3(1, 1, 1), r1.xyz);
   r1.yzw = cb0[173].zzz * r1.xyz;
   r0.w = floor(r1.y);
@@ -229,18 +251,26 @@ void main(
   r0.w = r1.x * cb0[173].z + -r0.w;
   r1.xyz = r2.xyz + -r3.xyz;
   r1.xyz = r0.www * r1.xyz + r3.xyz;
+
+  // ARRI_C1000_NO_CUT
   r1.xyz = float3(-0.386036009, -0.386036009, -0.386036009) + r1.xyz;
   r1.xyz = float3(13.6054821, 13.6054821, 13.6054821) * r1.xyz;
   r1.xyz = exp2(r1.xyz);
   r1.xyz = float3(-0.0479959995, -0.0479959995, -0.0479959995) + r1.xyz;
   r1.xyz = r1.xyz * float3(0.179999992, 0.179999992, 0.179999992) + -r0.xyz;
+
   r0.xyz = cb0[173].www * r1.xyz + r0.xyz;
+
+  // colorLinear = FastTonemap(colorLinear);
   r0.w = max(r0.x, r0.y);
   r0.w = max(r0.w, r0.z);
   r0.w = 1 + r0.w;
   r0.w = 1 / r0.w;
+
   r0.xyz = r0.xyz * r0.www + float3(0.00390625, 0.00390625, 0.00390625);
   r0.w = 0;
+
+  // Y (master)
   r1.xyzw = t2.Sample(s0_s, r0.xw).xyzw;
   r1.x = saturate(r1.x);
   r2.xyzw = t2.Sample(s0_s, r0.yw).xyzw;
@@ -255,6 +285,8 @@ void main(
   r1.y = saturate(r2.x);
   r0.xyzw = t5.Sample(s0_s, r0.zw).xyzw;
   r1.z = saturate(r0.x);
+
+  // colorLinear = FastTonemapInvert(colorLinear);
   r0.x = max(r1.x, r1.y);
   r0.x = max(r0.x, r1.z);
   r0.x = 1 + -r0.x;
@@ -285,6 +317,7 @@ void main(
     float3 color_output = lerp(color_lut_input, lutted_inversed, saturate(RENODX_COLOR_GRADE_LUT_STRENGTH));
 
     o0.xyz = color_output;
+    o0.xyz = ApplyOutputToneMap(o0.xyz, v1.xy);
     o0.w = 1.0f;
     return;
   }

@@ -297,52 +297,6 @@ float3 HighQualityBloomLutSample(float3 color_lut_input, Texture2D<float4> lut_t
   return color_output;
 }
 
-float3 UberpostArriLutSample(float3 color_lut_input, Texture2D<float4> lut_texture, SamplerState lut_sample) {
-  color_lut_input = max(0, color_lut_input);
-
-  float3 hdr_color = color_lut_input;
-  float3 hdr_color_tm = renodx::tonemap::neutwo::ComputeMaxChannelScale(hdr_color);
-  if (RENODX_TONE_MAP_TYPE > 0) {
-    // color_lut_input = (hdr_color * hdr_color_tm);
-  }
-
-  renodx::lut::Config lut_config = renodx::lut::config::Create(
-      lut_sample,
-      1.f,
-      0.f,
-      renodx::lut::config::type::ARRI_C1000_NO_CUT,
-      renodx::lut::config::type::LINEAR);
-
-  return renodx::lut::Sample(
-      lut_texture,
-      lut_config,
-      color_lut_input);
-}
-
-float3 UberpostSrgbLutSample(float3 color_lut_input, float4 lut_params, Texture2D<float4> lut_texture, SamplerState lut_sample) {
-  color_lut_input = max(0, color_lut_input);
-
-  float3 hdr_color = color_lut_input;
-  float3 hdr_color_tm = renodx::tonemap::neutwo::ComputeMaxChannelScale(hdr_color);
-  if (RENODX_TONE_MAP_TYPE > 0) {
-    // color_lut_input = (hdr_color * hdr_color_tm);
-  }
-
-  bool useSDRLut = (lut_params.w > 0.0f);
-
-  renodx::lut::Config lut_config = renodx::lut::config::Create(
-      lut_sample,
-      useSDRLut ? lut_params.w * RENODX_COLOR_GRADE_LUT_STRENGTH : 0,
-      RENODX_COLOR_GRADE_LUT_SCALING,
-      renodx::lut::config::type::SRGB,
-      renodx::lut::config::type::SRGB);
-
-  return renodx::lut::Sample(
-      lut_texture,
-      lut_config,
-      color_lut_input);
-}
-
 float3 ProcessBloom(float3 color) {
   if (RENODX_TONE_MAP_TYPE > 0) {
     color = lerp(0.f, color, CUSTOM_BLOOM);
@@ -412,6 +366,46 @@ float3 ApplyOutputToneMap(float3 untonemapped_bt709, float2 texcoord) {
     }
   }
   return output_color;
+}
+
+float3 UberpostArriLutSample(float3 color_lut_input, Texture2D<float4> lut_texture, SamplerState lut_sample) {
+  color_lut_input = max(0, color_lut_input);
+
+  float3 hdr_color = color_lut_input;
+  float3 hdr_color_tm = renodx::tonemap::neutwo::ComputeMaxChannelScale(hdr_color);
+
+  renodx::lut::Config lut_config = renodx::lut::config::Create(
+      lut_sample,
+      1.f,
+      0.f,
+      renodx::lut::config::type::ARRI_C1000_NO_CUT,
+      renodx::lut::config::type::LINEAR);
+
+  return renodx::lut::Sample(
+      lut_texture,
+      lut_config,
+      color_lut_input);
+}
+
+float3 UberpostSrgbLutSample(float3 color_lut_input, float4 lut_params, Texture2D<float4> lut_texture, SamplerState lut_sample) {
+  color_lut_input = max(0, color_lut_input);
+
+  float3 hdr_color = color_lut_input;
+  float3 hdr_color_tm = renodx::tonemap::neutwo::ComputeMaxChannelScale(hdr_color);
+
+  bool useSDRLut = (lut_params.w > 0.0f);
+
+  renodx::lut::Config lut_config = renodx::lut::config::Create(
+      lut_sample,
+      useSDRLut ? lut_params.w * RENODX_COLOR_GRADE_LUT_STRENGTH : 0,
+      RENODX_COLOR_GRADE_LUT_SCALING,
+      renodx::lut::config::type::SRGB,
+      renodx::lut::config::type::SRGB);
+
+  return renodx::lut::Sample(
+      lut_texture,
+      lut_config,
+      color_lut_input);
 }
 
 float3 ApplyDisplayMap(float3 untonemapped) {

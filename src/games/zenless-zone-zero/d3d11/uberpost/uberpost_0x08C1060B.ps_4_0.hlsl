@@ -337,6 +337,8 @@ void main(
     r2.xyz = r2.xyz * r1.xyz;
   }
 
+  r2.xyz = ApplyOutputToneMap(r2.xyz, v1.xy);
+
   r0.z = cmp(0 < cb1[13].x);
   if (r0.z != 0) {
     r0.xy = r0.xy * cb1[8].xy + cb1[8].zw;
@@ -354,7 +356,6 @@ void main(
   // o0.xyz = saturate(r2.xyz);
   o0.xyz = (r2.xyz);
 
-  o0.xyz = ApplyOutputToneMap(o0.xyz, v1.xy);
   o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
   return;
