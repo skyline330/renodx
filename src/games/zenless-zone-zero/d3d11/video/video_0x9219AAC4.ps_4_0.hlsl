@@ -59,7 +59,11 @@ void main(
 
   o0.xyz = hdr_video;
 
-  o0.xyz = FilmGrain(o0.xyz, v1.xy);
+  o0.xyz = renodx::effects::ApplyFilmGrain(
+      o0.xyz,
+      v1.xy,
+      CUSTOM_RANDOM,
+      CUSTOM_FILM_GRAIN * 0.03f);
 
   o0.w = 1 + -cb0[5].x;
   return;

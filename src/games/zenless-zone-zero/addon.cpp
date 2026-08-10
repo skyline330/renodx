@@ -329,6 +329,16 @@ renodx::utils::settings::Settings settings = {
         .max = 1000.f,
     },
     new renodx::utils::settings::Setting{
+        .key = "HideUI",
+        .binding = &shader_injection.custom_hide_ui,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 1.f,
+        .label = "Hide UI (DX12 DLSSFG ONLY)",
+        .section = "Effects",
+        .tooltip = "Hides the user interface.\n"
+                   "Only works with DLSSFG enabled, otherwise it does nothing.",
+    },
+    new renodx::utils::settings::Setting{
         .key = "SwapchainClampColorSpace",
         .binding = &shader_injection.swap_chain_clamp_color_space,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
@@ -529,23 +539,24 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
               },
           },
       };
-
+      /*
       //  RG11B10_float (UAV stuff)
       renodx::mods::swapchain::resource_upgrade_infos.push_back({
           .old_format = reshade::api::format::r11g11b10_float,
-          .new_format = reshade::api::format::r16g16b16a16_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
           // .ignore_size = true,
           .use_resource_view_cloning = true,
           .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::unordered_access,
       });
-
+      */
       //  R8G8B8A8_typeless resources - Main game
       renodx::mods::swapchain::resource_upgrade_infos.push_back({
           .old_format = reshade::api::format::r8g8b8a8_typeless,
-          .new_format = reshade::api::format::r16g16b16a16_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .ignore_size = true,
+          .use_resource_view_cloning = true,
           // .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           // .aspect_ratio_tolerance = 0.02f,
-          .ignore_size = true,
       });
       /*
       //  R8G8B8A8_unorm resources - VR Training lut
@@ -561,7 +572,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       //  R10G10B10A2_UNORM
       renodx::mods::swapchain::resource_upgrade_infos.push_back({
           .old_format = reshade::api::format::r10g10b10a2_unorm,
-          .new_format = reshade::api::format::r16g16b16a16_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
           // .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           // .aspect_ratio_tolerance = 0.02f,
           // .ignore_size = true,

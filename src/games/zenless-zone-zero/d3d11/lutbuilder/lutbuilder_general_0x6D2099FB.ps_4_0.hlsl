@@ -295,27 +295,21 @@ void main(
 
   bool useSDRLut = (cb0[171].w > 0.0f);
 
-  renodx::lut::Config lut_config = renodx::lut::config::Create(
-      s2_s,
-      useSDRLut ? cb0[171].w * RENODX_COLOR_GRADE_LUT_STRENGTH : 0,
-      RENODX_COLOR_GRADE_LUT_SCALING,
-      renodx::lut::config::type::SRGB,
-      renodx::lut::config::type::SRGB,
-      cb0[171].xyz  // precompute
-  );
+  renodx::lut::Config lut_config = renodx::lut::config::Create();
+  lut_config.lut_sampler = s2_s;
+  lut_config.strength = useSDRLut ? cb0[171].w * RENODX_COLOR_GRADE_LUT_STRENGTH : 0;
+  lut_config.scaling = RENODX_COLOR_GRADE_LUT_SCALING;
+  lut_config.type_input = renodx::lut::config::type::SRGB;
+  lut_config.type_output = renodx::lut::config::type::SRGB;
+  lut_config.recolor = 0.f;
+  lut_config.max_channel = 1.f;
+  lut_config.gamut_compress = 1.f;
+  lut_config.precompute = cb0[171].xyz;
 
   float3 color_lut_input = r0.xyz;
 
   if (RENODX_TONE_MAP_TYPE > 0) {
-    float gamut_compression_scale = 1.f;
-    float3 color_lut_input_compressed = ComputeGamutCompressionScaleAndCompress(color_lut_input, gamut_compression_scale);
-    float scale = renodx::tonemap::neutwo::ComputeMaxChannelScale(color_lut_input_compressed);
-    float3 color_lut_input_tonemapped = (color_lut_input_compressed * scale);  // Tonemap input MaxCh to 1
-    float3 lutted = renodx::lut::Sample(t1, lut_config, color_lut_input_tonemapped);
-    float3 lutted_decompressed = GamutDecompress(lutted, gamut_compression_scale);
-    float3 lutted_inversed = (lutted_decompressed / scale);  // Inverse scale
-    float3 color_output = lerp(color_lut_input, lutted_inversed, saturate(RENODX_COLOR_GRADE_LUT_STRENGTH));
-
+    float3 color_output = renodx::lut::Sample(t1, lut_config, color_lut_input);
     o0.xyz = color_output;
     o0.xyz = ApplyOutputToneMap(o0.xyz, v1.xy);
     o0.w = 1.0f;

@@ -48,6 +48,7 @@
 #define CUSTOM_RCAS               shader_injection.custom_rcas
 #define RENODX_VIDEO_NITS         shader_injection.tone_map_video_nits
 #define RENODX_TONE_MAP_HDR_VIDEO shader_injection.tone_map_hdr_video
+#define CUSTOM_HIDE_UI            shader_injection.custom_hide_ui
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -85,6 +86,7 @@ struct ShaderInjectData {
   float custom_random;
   float custom_vignette;
   float custom_cone_response;
+  float custom_hide_ui;
 
   float tone_map_video_nits;
   float tone_map_hdr_video;
