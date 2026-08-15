@@ -301,14 +301,6 @@ float3 ApplyOutputToneMap(float3 untonemapped_bt709, float2 texcoord) {
     if (RENODX_TONE_MAP_TYPE == RENODX_TONE_MAP_TYPE_PSYCHOV17) {
       output_color = ApplyPsychoV17(untonemapped_bt709);
     }
-    if (CUSTOM_FILM_GRAIN != 0) {
-      output_color = renodx::effects::ApplyFilmGrain(
-          output_color,
-          texcoord,
-          CUSTOM_RANDOM,
-          CUSTOM_FILM_GRAIN * 0.03f,
-          1.f);
-    }
   }
   return output_color;
 }

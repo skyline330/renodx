@@ -23,5 +23,10 @@ void main(
     o0.xyz = ApplyRCAS(o0.xyz, v0.xy, BlitTexture, BlitSampler_s);
   }
 
+  // Apply film grain
+  if (CUSTOM_FILM_GRAIN > 0.0f && aspectRatio != 0.5f && aspectRatio != 1.0f && aspectRatio != 1.5f) {
+    o0.xyz = renodx::effects::ApplyFilmGrain(o0.xyz, v0.xy, CUSTOM_RANDOM, CUSTOM_FILM_GRAIN * 0.03f);
+  }
+
   return;
 }

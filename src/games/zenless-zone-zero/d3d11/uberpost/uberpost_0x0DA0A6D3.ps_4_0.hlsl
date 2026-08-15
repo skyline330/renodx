@@ -1,6 +1,10 @@
 #include "../../common.hlsli"
 
-// ---- Created with 3Dmigoto v1.4.1 on Wed Jun 17 01:21:16 2026
+// ---- Created with 3Dmigoto v1.4.1 on Fri Aug 14 21:10:12 2026
+Texture2D<float4> t7 : register(t7);
+
+Texture2D<float4> t6 : register(t6);
+
 Texture2D<float4> t5 : register(t5);
 
 Texture2D<float4> t4 : register(t4);
@@ -20,6 +24,10 @@ SamplerState s2_s : register(s2);
 SamplerState s1_s : register(s1);
 
 SamplerState s0_s : register(s0);
+
+cbuffer cb2 : register(b2) {
+  float4 cb2[4];
+}
 
 cbuffer cb1 : register(b1) {
   float4 cb1[30];
@@ -43,7 +51,7 @@ void main(
 
   r0.x = cmp(0 < cb1[11].w);
   if (r0.x != 0) {
-    r1.xyzw = t3.Sample(s2_s, v1.xy).xyzw;
+    r1.xyzw = t5.Sample(s2_s, v1.xy).xyzw;
     r0.yz = float2(0.100000001, 0.100000001) * r1.xy;
     r1.xy = r1.xy * float2(0.100000001, 0.100000001) + v1.xy;
     r1.zw = r0.yz * r1.zz;
@@ -79,31 +87,31 @@ void main(
     r1.zw = r1.zw * r3.xx;
     r3.xy = v1.xy + r2.xy;
     r3.xy = r1.zw * cb1[25].ww + r3.xy;
-    r3.xyzw = t0.Sample(s0_s, r3.xy).xyzw;
+    r3.xyzw = t1.Sample(s0_s, r3.xy).xyzw;
     r3.yz = v1.xy + r2.zw;
     r3.yz = r1.zw * cb1[26].ww + r3.yz;
-    r4.xyzw = t0.Sample(s0_s, r3.yz).xyzw;
+    r4.xyzw = t1.Sample(s0_s, r3.yz).xyzw;
     r3.yz = v1.xy + r0.yz;
     r1.zw = r1.zw * cb1[27].ww + r3.yz;
-    r5.xyzw = t0.Sample(s0_s, r1.zw).xyzw;
+    r5.xyzw = t1.Sample(s0_s, r1.zw).xyzw;
     r3.yzw = cb1[26].xyz * r4.yyy;
     r3.xyz = r3.xxx * cb1[25].xyz + r3.yzw;
     r3.xyz = r5.zzz * cb1[27].zxy + r3.zxy;
-    r4.xyzw = t0.Sample(s0_s, r1.xy).wxyz;
+    r4.xyzw = t1.Sample(s0_s, r1.xy).wxyz;
   } else {
     if (r0.x != 0) {
       r0.xw = v1.xy + r2.xy;
-      r5.xyzw = t0.Sample(s0_s, r0.xw).xyzw;
+      r5.xyzw = t1.Sample(s0_s, r0.xw).xyzw;
       r0.xw = v1.xy + r2.zw;
-      r2.xyzw = t0.Sample(s0_s, r0.xw).xyzw;
+      r2.xyzw = t1.Sample(s0_s, r0.xw).xyzw;
       r0.xy = v1.xy + r0.yz;
-      r3.xyzw = t0.Sample(s0_s, r0.xy).zxyw;
+      r3.xyzw = t1.Sample(s0_s, r0.xy).zxyw;
       r3.y = r5.x;
       r3.z = r2.y;
     } else {
-      r3.xyzw = t0.Sample(s0_s, r1.xy).zxyw;
+      r3.xyzw = t1.Sample(s0_s, r1.xy).zxyw;
     }
-    r4.xyzw = t0.Sample(s0_s, r1.xy).wxyz;
+    r4.xyzw = t1.Sample(s0_s, r1.xy).wxyz;
   }
   r0.x = cmp(cb1[21].z < 0.5);
   r0.yz = cmp(float2(0, 0) < cb1[21].xy);
@@ -133,7 +141,7 @@ void main(
     r0.w = cmp(0.5 >= r0.w);
     r0.w = r0.w ? 0.999989986 : -1;
     r0.y = cb1[29].z * r0.w + r1.y;
-    r2.xyzw = t4.Sample(s3_s, r0.xy).xyzw;
+    r2.xyzw = t6.Sample(s3_s, r0.xy).xyzw;
     r0.xyw = log2(abs(r2.xyz));
     r0.xyw = float3(0.333333343, 0.333333343, 0.333333343) * r0.xyw;
     r0.xyw = exp2(r0.xyw);
@@ -150,7 +158,7 @@ void main(
     r2.xyz = r1.www ? r2.xyz : r0.xyw;
     if (r0.z != 0) {
       r1.zw = r1.xy * cb1[20].xy + cb1[20].zw;
-      r5.xyzw = t5.Sample(s0_s, r1.zw).xyzw;
+      r5.xyzw = t7.Sample(s0_s, r1.zw).xyzw;
       r4.yzw = cb1[21].yyy * r5.xyz;
       r2.xyz = r4.yzw * r0.xyw + r2.xyz;
     }
@@ -180,7 +188,7 @@ void main(
   }
 
   if (RENODX_TONE_MAP_TYPE > 0) {
-    r0.zxy = UberpostVRLutSample(r3.xyz, cb1[0], t2, s0_s);
+    r0.zxy = UberpostVRLutSample(r3.xyz, cb1[0], t3, s0_s);
     r0.zxy = ApplyOutputToneMap(r0.zxy, v0.xy);
   } else {
     r3.xyz = saturate(r3.xyz);
@@ -196,11 +204,11 @@ void main(
     r1.xy = float2(0.5, 0.5) * cb1[0].xy;
     r1.yz = r0.zw * cb1[0].xy + r1.xy;
     r1.x = r0.y * cb1[0].y + r1.y;
-    r2.xyzw = t2.SampleLevel(s0_s, r1.xz, 0).xyzw;
+    r2.xyzw = t3.SampleLevel(s0_s, r1.xz, 0).xyzw;
     r3.x = cb1[0].y;
     r3.y = 0;
     r0.zw = r3.xy + r1.xz;
-    r1.xyzw = t2.SampleLevel(s0_s, r0.zw, 0).xyzw;
+    r1.xyzw = t3.SampleLevel(s0_s, r0.zw, 0).xyzw;
     r0.x = r0.x * cb1[0].z + -r0.y;
     r0.yzw = r1.xyz + -r2.xyz;
     r0.xyz = r0.xxx * r0.yzw + r2.xyz;
@@ -217,7 +225,7 @@ void main(
   r0.w = cmp(0 < cb1[13].x);
   if (r0.w != 0) {
     r1.xy = v1.xy * cb1[8].xy + cb1[8].zw;
-    r1.xyzw = t1.Sample(s1_s, r1.xy).xyzw;
+    r1.xyzw = t2.Sample(s1_s, r1.xy).xyzw;
     r0.w = -0.5 + r1.w;
     r0.w = r0.w + r0.w;
     r1.x = dot(r0.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
@@ -227,8 +235,75 @@ void main(
     r1.yzw = cb1[13].xxx * r1.yzw;
     r0.xyz = r1.yzw * r1.xxx + r0.xyz;
   }
-  // o0.xyz = saturate(r0.xyz);
-  o0.xyz = (r0.xyz);
+  r0.w = r0.x + r0.y;
+  r0.w = r0.w + r0.z;
+  r1.x = 0.333333343 * r0.w;
+  r0.xyz = -r0.www * float3(0.333333343, 0.333333343, 0.333333343) + r0.xyz;
+  r0.xyz = r0.xyz * cb2[0].www + r1.xxx;
+  r1.x = cmp(0.5 < cb0[54].w);
+  if (r1.x != 0) {
+    r1.x = dot(r0.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
+    r1.y = 0.5;
+    r0.xyzw = t0.Sample(s0_s, r1.xy).xyzw;
+  }
+  r1.xyz = saturate(r0.xyz);
+  r1.xyz = float3(1, 1, 1) + -r1.xyz;
+  r1.xyz = r1.xyz + -r0.xyz;
+  r0.xyz = cb2[1].www * r1.xyz + r0.xyz;
+  r0.w = saturate(dot(r0.xyz, float3(0.212672904, 0.715152204, 0.0721750036)));
+  r0.w = -cb2[2].y + r0.w;
+  r0.w = saturate(cb2[2].z * r0.w);
+  r1.xyz = cb2[1].xyz + -cb2[0].xyz;
+  r1.xyz = r0.www * r1.xyz + cb2[0].xyz;
+  r1.xyz = r1.xyz + -r0.xyz;
+
+  if (RENODX_TONE_MAP_TYPE > 0) {
+    r0.xyz = (cb2[2].xxx * r1.xyz + r0.xyz);
+    // HDR FX Mask Blend
+    float3 result = r0.xyz;
+    r0.w = cmp(0.5 < cb2[2].w);
+    if (r0.w != 0) {
+      r1.xyzw = t4.Sample(s0_s, v1.xy).xyzw;
+      float m = smoothstep(0.0f, 1.0f, r1.x);
+      r0.w = cmp(cb2[3].w < 0.5);
+      if (r0.w != 0) {
+        // Simple lighten (HDR-compatible)
+        float3 blend_factor = pow(m, 2.2f);
+        result = result * (1.0f + blend_factor * 0.5f);
+      } else {
+        // Overlay (HDR-compatible)
+        float3 blend = cb2[3].xyz;
+        result = result * lerp(1.0f, blend * 2.0f, m);
+      }
+    }
+    o0.xyz = result;
+  } else {
+    r0.xyz = saturate(cb2[2].xxx * r1.xyz + r0.xyz);
+    r0.w = cmp(0.5 < cb2[2].w);
+    if (r0.w != 0) {
+      r1.xyzw = t4.Sample(s0_s, v1.xy).xyzw;
+      r0.w = cmp(cb2[3].w < 0.5);
+      r1.yzw = r1.xxx + r0.xyz;
+      r1.yzw = min(float3(1, 1, 1), r1.yzw);
+      r2.xyz = cb2[3].xyz * r0.xyz;
+      r2.xyz = r2.xyz + r2.xyz;
+      r3.xyz = float3(1, 1, 1) + -r0.xyz;
+      r3.xyz = r3.xyz + r3.xyz;
+      r4.xyz = float3(1, 1, 1) + -cb2[3].xyz;
+      r3.xyz = -r3.xyz * r4.xyz + float3(1, 1, 1);
+      r4.xyz = cmp(float3(0.5, 0.5, 0.5) >= r0.xyz);
+      r5.xyz = r4.xyz ? float3(1, 1, 1) : 0;
+      r4.xyz = r4.xyz ? float3(0, 0, 0) : float3(1, 1, 1);
+      r3.xyz = r4.xyz * r3.xyz;
+      r2.xyz = r5.xyz * r2.xyz + r3.xyz;
+      r2.w = 1 + -r1.x;
+      r2.xyz = r2.xyz * r1.xxx;
+      r2.xyz = r2.www * r0.xyz + r2.xyz;
+      o0.xyz = r0.www ? r1.yzw : r2.xyz;
+    } else {
+      o0.xyz = r0.xyz;
+    }
+  }
 
   o0.xyz = renodx::draw::RenderIntermediatePass(o0.xyz);
 
