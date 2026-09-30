@@ -2527,14 +2527,10 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 
       break;
     case DLL_PROCESS_DETACH:
-      renodx::utils::shader::Use(fdw_reason);
-      renodx::utils::swapchain::Use(fdw_reason);
-      renodx::utils::resource::Use(fdw_reason);
       reshade::unregister_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       // start keybind code
       reshade::unregister_event<reshade::addon_event::reshade_overlay>(OnOverlay);
       // end keybind code
-      reshade::unregister_addon(h_module);
       break;
   }
 
