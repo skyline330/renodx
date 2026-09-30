@@ -269,7 +269,7 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
 
-        new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "SafeLimitWhiteClip",
         .binding = &shader_injection.safe_limit_white_clip,
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
@@ -280,7 +280,7 @@ renodx::utils::settings::Settings settings = {
         .labels = {"Off", "On"},
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling != 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
-      },
+    },
 
     // new renodx::utils::settings::Setting{
     //     .key = "ToneMapHueCorrectionType",
@@ -335,7 +335,7 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.tone_map_scaling == 2.f; },
     },
 
-        new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "ToneMapPerChPeak",
         .binding = &shader_injection.tone_map_per_ch_peak,
         .default_value = 5.f,
@@ -576,14 +576,12 @@ renodx::utils::settings::Settings settings = {
         .label = "LUT Scaling Mode",
         .section = "Color Grading LUTs",
         .tooltip = "Perceptual: Always scales the LUT to true black, and attempts to remap the LUT color back onto the image. This is how LUT Scaling worked originally.\n"
-             "Hue Preserving: Reduces the LUTs black raise while preserving the color tint where necessary.\n"
-             "Color Restoring: Reduces the LUTs black raise to always achieve true black. Can affect the way the LUT colors look in shadow.",
+                   "Hue Preserving: Reduces the LUTs black raise while preserving the color tint where necessary.\n"
+                   "Color Restoring: Reduces the LUTs black raise to always achieve true black. Can affect the way the LUT colors look in shadow.",
         .labels = {"Perceptual (Legacy)", "Hue Preserving", "Color Restoring"},
-        .is_enabled = []() {
-          return shader_injection.tone_map_type != 0.f
-                 && shader_injection.custom_lut_scaling != 0.f
-                 && shader_injection.tone_map_scaling != 0.f;
-        },
+        .is_enabled = []() { return shader_injection.tone_map_type != 0.f
+                                    && shader_injection.custom_lut_scaling != 0.f
+                                    && shader_injection.tone_map_scaling != 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     // new renodx::utils::settings::Setting{
@@ -1325,6 +1323,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
     },
     {
         "Dune: Awakening",
+        GameSettings{
+            {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+        },
+    },
+    {
+        "Minecraft Dungeons II",
         GameSettings{
             {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
         },
