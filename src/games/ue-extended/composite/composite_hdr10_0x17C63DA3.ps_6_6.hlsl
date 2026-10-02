@@ -64,15 +64,13 @@ float4 main(
   float _203;
   _11 = t0.Sample(s0, float2(TEXCOORD.x, TEXCOORD.y));
   _119 = t1.Sample(s1, float2(TEXCOORD.x, TEXCOORD.y));
-  [branch]
-  if (RENODX_PEAK_WHITE_NITS > 0.f) {
-    // The helper expects normalized encoded BT.709 UI, not the native
-    // HDR-scaled _114/_115/_116. It applies the user UI-nits scale once.
-    HandleUICompositing(_11, _119, SV_Target, TEXCOORD, t1, s1);
+
+  // Pass normalized encoded BT.709 UI before the native HDR brightness scale.
+  if (HandleUICompositing(_11, _119, SV_Target, TEXCOORD.xy, t1, s1)) {
     return SV_Target;
   }
 
-  // Original native composite retained for no-addon live fallback.
+  // Original native composite retained below the shared helper return.
   _40 = select((_11.x > 0.040449999272823334f), exp2(log2((abs(_11.x) * 0.9478672742843628f) + 0.05213269963860512f) * 2.4000000953674316f), (_11.x * 0.07739938050508499f));
   _41 = select((_11.y > 0.040449999272823334f), exp2(log2((abs(_11.y) * 0.9478672742843628f) + 0.05213269963860512f) * 2.4000000953674316f), (_11.y * 0.07739938050508499f));
   _42 = select((_11.z > 0.040449999272823334f), exp2(log2((abs(_11.z) * 0.9478672742843628f) + 0.05213269963860512f) * 2.4000000953674316f), (_11.z * 0.07739938050508499f));
