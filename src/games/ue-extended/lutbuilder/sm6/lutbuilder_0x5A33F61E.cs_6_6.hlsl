@@ -867,12 +867,9 @@ void main(
   _418 = (_407 / _414) + -1.0f;
   _419 = (_410 / _414) + -1.0f;
   _420 = (_413 / _414) + -1.0f;
-  // ExpandGamut set to 0 with addon injection, including the shared Vanilla/0 path.
-  if (RENODX_PEAK_WHITE_NITS > 0.f) {
-    _432 = 0.f;
-  } else {
-    _432 = (1.0f - exp2(((_414 * _414) * -4.0f) * cb0_038w)) * (1.0f - exp2(dot(float3(_418, _419, _420), float3(_418, _419, _420)) * -4.0f));
-  }
+  // ExpandGamut set to 0
+  // _432 = (1.0f - exp2(((_414 * _414) * -4.0f) * cb0_038w)) * (1.0f - exp2(dot(float3(_418, _419, _420), float3(_418, _419, _420)) * -4.0f));
+  _432 = (1.0f - exp2(((_414 * _414) * -4.0f) * 0.f)) * (1.0f - exp2(dot(float3(_418, _419, _420), float3(_418, _419, _420)) * -4.0f));
   _460 = ((mad(cb0_042z, _413, mad(cb0_042y, _410, (cb0_042x * _407))) - _407) * _432) + _407;
   _461 = ((mad(cb0_043z, _413, mad(cb0_043y, _410, (cb0_043x * _407))) - _410) * _432) + _410;
   _462 = ((mad(cb0_044z, _413, mad(cb0_044y, _410, (cb0_044x * _407))) - _413) * _432) + _413;
@@ -904,29 +901,26 @@ void main(
   _827 = ((_713 * (((cb0_021x + cb0_036x) + _610) + (((cb0_020x * cb0_035x) * _619) * exp2(log2(exp2(((cb0_018x * cb0_033x) * _637) * log2(max(0.0f, ((((cb0_017x * cb0_032x) * _646) * _537) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019x * cb0_034x) * _628)))))) + (_601 * (((cb0_021x + cb0_026x) + _477) + (((cb0_020x * cb0_025x) * _491) * exp2(log2(exp2(((cb0_018x * cb0_023x) * _519) * log2(max(0.0f, ((((cb0_017x * cb0_022x) * _533) * _537) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019x * cb0_024x) * _505))))))) + ((((cb0_021x + cb0_031x) + _722) + (((cb0_020x * cb0_030x) * _731) * exp2(log2(exp2(((cb0_018x * cb0_028x) * _749) * log2(max(0.0f, ((((cb0_017x * cb0_027x) * _758) * _537) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019x * cb0_029x) * _740))))) * _816);
   _829 = ((_713 * (((cb0_021y + cb0_036y) + _610) + (((cb0_020y * cb0_035y) * _619) * exp2(log2(exp2(((cb0_018y * cb0_033y) * _637) * log2(max(0.0f, ((((cb0_017y * cb0_032y) * _646) * _538) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019y * cb0_034y) * _628)))))) + (_601 * (((cb0_021y + cb0_026y) + _477) + (((cb0_020y * cb0_025y) * _491) * exp2(log2(exp2(((cb0_018y * cb0_023y) * _519) * log2(max(0.0f, ((((cb0_017y * cb0_022y) * _533) * _538) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019y * cb0_024y) * _505))))))) + ((((cb0_021y + cb0_031y) + _722) + (((cb0_020y * cb0_030y) * _731) * exp2(log2(exp2(((cb0_018y * cb0_028y) * _749) * log2(max(0.0f, ((((cb0_017y * cb0_027y) * _758) * _538) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019y * cb0_029y) * _740))))) * _816);
   _831 = ((_713 * (((cb0_021z + cb0_036z) + _610) + (((cb0_020z * cb0_035z) * _619) * exp2(log2(exp2(((cb0_018z * cb0_033z) * _637) * log2(max(0.0f, ((((cb0_017z * cb0_032z) * _646) * _539) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019z * cb0_034z) * _628)))))) + (_601 * (((cb0_021z + cb0_026z) + _477) + (((cb0_020z * cb0_025z) * _491) * exp2(log2(exp2(((cb0_018z * cb0_023z) * _519) * log2(max(0.0f, ((((cb0_017z * cb0_022z) * _533) * _539) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019z * cb0_024z) * _505))))))) + ((((cb0_021z + cb0_031z) + _722) + (((cb0_020z * cb0_030z) * _731) * exp2(log2(exp2(((cb0_018z * cb0_028z) * _749) * log2(max(0.0f, ((((cb0_017z * cb0_027z) * _758) * _539) + _463)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019z * cb0_029z) * _740))))) * _816);
-  [branch]
-  if (RENODX_PEAK_WHITE_NITS > 0.f) {
-    // Hash-specific layout traced below: c039/c040 film, c038.z blue,
-    // c039.x tone strength, c052 polynomial, c016 scale, c015 overlay.
-    // _827/_829/_831 are graded linear AP1, before blue correction and film/RRT.
-    // No external SDR LUT textures are bound by this shader.
-    UECbufferConfig cb_config = CreateCbufferConfig();
-    cb_config.ue_filmblackclip = cb0_040x;
-    cb_config.ue_filmtoe = cb0_039z;
-    cb_config.ue_filmshoulder = cb0_039w;
-    cb_config.ue_filmslope = cb0_039y;
-    cb_config.ue_filmwhiteclip = cb0_040y;
-    cb_config.ue_tonecurveammount = cb0_039x;
-    cb_config.ue_mappingpolynomial = float3(cb0_052x, cb0_052y, cb0_052z);
-    cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
-    cb_config.ue_overlaycolor = float4(cb0_015x, cb0_015y, cb0_015z, cb0_015w);
-    cb_config.ue_bluecorrection = cb0_038z;
-    u0[SV_DispatchThreadID] = ProcessLutbuilder(
-        float3(_827, _829, _831), cb_config, float4(0.f, 0.f, 0.f, 0.f), cb0_053w);
-    return;
-  }
+  // Hash-specific layout traced below: c039/c040 film, c038.z blue,
+  // c039.x tone strength, c052 polynomial, c016 scale, c015 overlay.
+  // _827/_829/_831 are graded linear AP1, before blue correction and film/RRT.
+  // No external SDR LUT textures are bound by this shader.
+  UECbufferConfig cb_config = CreateCbufferConfig();
+  cb_config.ue_filmblackclip = cb0_040x;
+  cb_config.ue_filmtoe = cb0_039z;
+  cb_config.ue_filmshoulder = cb0_039w;
+  cb_config.ue_filmslope = cb0_039y;
+  cb_config.ue_filmwhiteclip = cb0_040y;
+  cb_config.ue_tonecurveammount = cb0_039x;
+  cb_config.ue_mappingpolynomial = float3(cb0_052x, cb0_052y, cb0_052z);
+  cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
+  cb_config.ue_overlaycolor = float4(cb0_015x, cb0_015y, cb0_015z, cb0_015w);
+  cb_config.ue_bluecorrection = cb0_038z;
+  u0[SV_DispatchThreadID] = ProcessLutbuilder(
+      float3(_827, _829, _831), cb_config, float4(0.f, 0.f, 0.f, 0.f), cb0_053w);
+  return;
 
-  // Original tail retained for field verification and no-addon live fallback.
+  // Original dead tail retained for field verification.
   _839 = saturate((max(max(_827, _829), _831) - cb0_041x) * cb0_041y);
   _867 = ((mad(cb0_046z, _831, mad(cb0_046y, _829, (cb0_046x * _827))) - _827) * _839) + _827;
   _868 = ((mad(cb0_047z, _831, mad(cb0_047y, _829, (cb0_047x * _827))) - _829) * _839) + _829;
