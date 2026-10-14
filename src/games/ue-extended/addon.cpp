@@ -1750,7 +1750,7 @@ void OnPushDescriptors(
     switch (param.type) {
       case reshade::api::pipeline_layout_param_type::descriptor_table: {
         if (param.descriptor_table.count != 1) {
-          reshade::log::message(reshade::log::level::error, "Wrong count.");
+          // reshade::log::message(reshade::log::level::error, "Wrong count.");
           // add warning
           return;
         }
@@ -1763,7 +1763,7 @@ void OnPushDescriptors(
         dx_register_space = param.push_descriptors.dx_register_space;
         break;
       default:
-        reshade::log::message(reshade::log::level::error, "Not descriptor table.");
+        // reshade::log::message(reshade::log::level::error, "Not descriptor table.");
         return;
     }
 
