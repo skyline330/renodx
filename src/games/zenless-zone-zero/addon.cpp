@@ -10,6 +10,12 @@
 #define RENODX_MODS_SWAPCHAIN_VERSION 2
 
 #include <algorithm>
+#include <atomic>
+#include <cstring>
+#include <filesystem>
+#include <mutex>
+#include <string>
+#include <vector>
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -18,8 +24,11 @@
 
 #include "../../mods/shader.hpp"
 #include "../../mods/swapchain.hpp"
+#include "../../utils/dlss_hook.hpp"
+#include "../../utils/path.hpp"
 #include "../../utils/random.hpp"
 #include "../../utils/settings.hpp"
+#include "../../utils/vtable.hpp"
 #include "./shared.h"
 
 namespace {
@@ -41,6 +50,141 @@ void OnPresetHdrLook();
 bool IsCustomToneMapperEnabled() { return shader_injection.tone_map_type != RENODX_TONE_MAP_TYPE_VANILLA; }
 bool IsRenoDRTEnabled() { return shader_injection.tone_map_type == RENODX_TONE_MAP_TYPE_RENODRT; }
 bool IsPsychoV17Enabled() { return shader_injection.tone_map_type == RENODX_TONE_MAP_TYPE_PSYCHOV17; }
+
+// Streamline v2 hooks must precede the game's Streamline/DXGI/D3D12 setup, which needs ReShade's early addon load.
+HMODULE addon_module = nullptr;
+bool has_early_load_entry = false;
+bool early_load_entry_added = false;
+
+std::string GetAddonFileName() {
+  wchar_t path[MAX_PATH] = L"";
+  GetModuleFileNameW(addon_module, path, ARRAYSIZE(path));
+  return std::filesystem::path(path).filename().string();
+}
+
+// ReShade stores [ADDON] LoadFromDllMain as a null-separated list.
+std::vector<std::string> ReadLoadFromDllMain() {
+  size_t size = 0;
+  if (!reshade::get_config_value(nullptr, "ADDON", "LoadFromDllMain", nullptr, &size) || size == 0) return {};
+  std::string raw(size, '\0');
+  if (!reshade::get_config_value(nullptr, "ADDON", "LoadFromDllMain", raw.data(), &size)) return {};
+
+  // Elements can be empty, so walk the returned byte count instead of stopping at the first empty one.
+  std::vector<std::string> values;
+  for (size_t offset = 0; offset < size;) {
+    const size_t length = strnlen(raw.data() + offset, size - offset);
+    if (length != 0) values.emplace_back(raw.data() + offset, length);
+    offset += length + 1;
+  }
+  return values;
+}
+
+bool HasLoadFromDllMainEntry(const std::vector<std::string>& values) {
+  const auto addon_file = GetAddonFileName();
+  return std::ranges::any_of(values, [&](const auto& value) {
+    return _stricmp(std::filesystem::path(value).filename().string().c_str(), addon_file.c_str()) == 0;
+  });
+}
+
+void AddLoadFromDllMainEntry() {
+  early_load_entry_added = true;
+  auto values = ReadLoadFromDllMain();
+  if (HasLoadFromDllMainEntry(values)) return;
+  values.push_back(GetAddonFileName());
+
+  std::string serialized;
+  for (const auto& value : values) {
+    serialized.append(value);
+    serialized.push_back('\0');
+  }
+  reshade::set_config_value(nullptr, "ADDON", "LoadFromDllMain", serialized.c_str(), serialized.size());
+  reshade::log::message(reshade::log::level::info, "Added this addon to [ADDON] LoadFromDllMain. Restart required.");
+}
+
+// Streamline answers this IID with the object below its proxy. The Streamline v2 hooks put ReShade's device, queues
+// and swapchain above Streamline's, and ReShade forwards unknown IIDs, so tools that unwrap Streamline proxies
+// (OptiScaler) get native objects and work past ReShade and Streamline. Only Streamline may unwrap through ReShade.
+constexpr GUID IID_STREAMLINE_BASE_INTERFACE = {0xADEC44E2, 0x61F0, 0x45C3, {0xAD, 0x9F, 0x1B, 0x37, 0x37, 0x92, 0x84, 0xFF}};
+
+using QueryInterfaceFn = HRESULT(STDMETHODCALLTYPE*)(IUnknown*, REFIID, void**);
+
+// Original QueryInterface per Streamline proxy class (device, command queue, swapchain); each class shares its vtable
+// across instances. Published before the vtable can reach the hook, and never cleared.
+std::atomic<QueryInterfaceFn> streamline_query_interfaces[3] = {};
+std::mutex streamline_query_interface_mutex;
+
+HMODULE GetModuleFromAddress(void* address) {
+  HMODULE module = nullptr;
+  GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                     static_cast<LPCWSTR>(address), &module);
+  return module;
+}
+
+template <size_t Index>
+HRESULT STDMETHODCALLTYPE StreamlineQueryInterface(IUnknown* proxy, REFIID riid, void** object) {
+  if (riid == IID_STREAMLINE_BASE_INTERFACE) {
+    void* callers[2] = {};
+    const auto count = RtlCaptureStackBackTrace(1, 2, callers, nullptr);
+    // ReShade forwards with a call or a tail call, so look past its frame when present.
+    HMODULE requester = count > 0 ? GetModuleFromAddress(callers[0]) : nullptr;
+    if (requester == reshade::internal::get_reshade_module_handle()) {
+      requester = count > 1 ? GetModuleFromAddress(callers[1]) : nullptr;
+    }
+    wchar_t path[MAX_PATH] = L"";
+    if (requester != nullptr && GetModuleFileNameW(requester, path, ARRAYSIZE(path)) != 0
+        && _wcsnicmp(std::filesystem::path(path).filename().c_str(), L"sl.", 3) != 0) {
+      if (object != nullptr) *object = nullptr;
+      return E_NOINTERFACE;
+    }
+  }
+  return streamline_query_interfaces[Index].load(std::memory_order_acquire)(proxy, riid, object);
+}
+
+constexpr QueryInterfaceFn STREAMLINE_QUERY_INTERFACE_HOOKS[] = {
+    &StreamlineQueryInterface<0>,
+    &StreamlineQueryInterface<1>,
+    &StreamlineQueryInterface<2>,
+};
+
+void GuardStreamlineUnwrap(uint64_t native, size_t index) {
+  auto* proxy = reinterpret_cast<IUnknown*>(native);
+  if (proxy == nullptr || streamline_query_interfaces[index].load(std::memory_order_acquire) != nullptr) return;
+  IUnknown* base = nullptr;
+  if (FAILED(proxy->QueryInterface(IID_STREAMLINE_BASE_INTERFACE, reinterpret_cast<void**>(&base)))) return;
+  base->Release();
+
+  const std::scoped_lock lock(streamline_query_interface_mutex);
+  if (streamline_query_interfaces[index].load(std::memory_order_relaxed) != nullptr) return;
+  auto** entry = *reinterpret_cast<void***>(proxy);
+  void* original = *entry;
+  if (std::ranges::find(STREAMLINE_QUERY_INTERFACE_HOOKS, reinterpret_cast<QueryInterfaceFn>(original))
+      != std::end(STREAMLINE_QUERY_INTERFACE_HOOKS)) {
+    return;
+  }
+  streamline_query_interfaces[index].store(reinterpret_cast<QueryInterfaceFn>(original), std::memory_order_release);
+  try {
+    renodx::utils::vtable::internal::Replace(entry, original, reinterpret_cast<void*>(STREAMLINE_QUERY_INTERFACE_HOOKS[index]));
+  } catch (const std::exception& e) {
+    // Replace can roll back after the hook was briefly reachable, so the original stays published. This also leaves
+    // one install attempt per class; without the guard OptiScaler unwraps as before.
+    reshade::log::message(reshade::log::level::warning, e.what());
+    return;
+  }
+  // The hook is never removed: ReShade does not unload early-loaded addons, and Streamline may be gone by exit.
+  HMODULE pinned = nullptr;
+  GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
+                     reinterpret_cast<LPCWSTR>(addon_module), &pinned);
+  reshade::log::message(reshade::log::level::info, "Guarding Streamline unwrap behind ReShade.");
+}
+
+// Registered after the Streamline v2 hooks, so these see objects Streamline has already upgraded.
+void OnInitStreamlineDevice(reshade::api::device* device) {
+  GuardStreamlineUnwrap(device->get_native(), 0);
+}
+
+void OnInitStreamlineCommandQueue(reshade::api::command_queue* queue) {
+  GuardStreamlineUnwrap(queue->get_native(), 1);
+}
 
 renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
@@ -351,6 +495,17 @@ renodx::utils::settings::Settings settings = {
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Enable DLSS HDR / Frame Generation (Restart Required)",
+        .section = "Display Output",
+        .tooltip = "Adds this addon to ReShade's [ADDON] LoadFromDllMain.\n"
+                   "Without it, DLSS output is limited to SDR range and frame generation may render black.",
+        .tint = 0xFFB84D,
+        .is_enabled = []() { return !early_load_entry_added; },
+        .on_change = AddLoadFromDllMainEntry,
+        .is_visible = []() { return !has_early_load_entry; },
+    },
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
         .label = "Reset All",
         .section = "Presets",
         .group = "button-line-1",
@@ -479,6 +634,12 @@ void OnInitDevice(reshade::api::device* device) {
 bool fired_on_init_swapchain = false;
 
 void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
+  // ReShade's native swapchain is Streamline's proxy when the Streamline v2 hooks are active.
+  if (has_early_load_entry) {
+    GuardStreamlineUnwrap(swapchain->get_device()->get_native(), 0);
+    GuardStreamlineUnwrap(swapchain->get_native(), 2);
+  }
+
   if (fired_on_init_swapchain) return;
   fired_on_init_swapchain = true;
 
@@ -498,6 +659,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH: {
       if (!reshade::register_addon(h_module)) return FALSE;
+
+      addon_module = h_module;
+      has_early_load_entry = HasLoadFromDllMainEntry(ReadLoadFromDllMain());
+      if (!has_early_load_entry) {
+        reshade::log::message(reshade::log::level::warning,
+                             "Not listed in [ADDON] LoadFromDllMain: DLSS HDR/frame generation support disabled.");
+      }
 
       // Check if we're a raytracing pipeline using NvAPI SER, it follows this layout:
       // [0] | TBL | 1885845696336 | TUAV, array_size: 1, binding: 0, count: 1, register: 0, space: 2, visibility: all
@@ -605,6 +773,10 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 
       reshade::register_event<reshade::addon_event::init_device>(OnInitDevice);
 
+      // Streamline v2: DLSS HDR mode and FP16 clone tags for DLSS and frame generation.
+      renodx::utils::dlss_hook::nvngx_dlss_file_path = (renodx::utils::path::GetExecutableBasePath() / "nvngx_dlss.dll").string();
+      renodx::utils::dlss_hook::streamline_interposer_file_path = (renodx::utils::path::GetExecutableBasePath() / "sl.interposer.dll").string();
+
       // peak nits
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
 
@@ -620,6 +792,17 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   renodx::mods::swapchain::Use(fdw_reason, &shader_injection);
   renodx::mods::shader::Use(fdw_reason, custom_shaders, &shader_injection);
   renodx::utils::random::Use(fdw_reason);
+  // Late Streamline hooks miss the game's setup and break rendering, so leave DLSS untouched instead.
+  if (has_early_load_entry) {
+    renodx::utils::dlss_hook::Use(fdw_reason);
+    if (fdw_reason == DLL_PROCESS_ATTACH) {
+      reshade::register_event<reshade::addon_event::init_device>(OnInitStreamlineDevice);
+      reshade::register_event<reshade::addon_event::init_command_queue>(OnInitStreamlineCommandQueue);
+    } else if (fdw_reason == DLL_PROCESS_DETACH) {
+      reshade::unregister_event<reshade::addon_event::init_device>(OnInitStreamlineDevice);
+      reshade::unregister_event<reshade::addon_event::init_command_queue>(OnInitStreamlineCommandQueue);
+    }
+  }
 
   return TRUE;
 }
