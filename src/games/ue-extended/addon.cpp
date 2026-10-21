@@ -1649,7 +1649,14 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
     {
         "Talos2",  // The Talos Principle 2
         GameSettings{
-            {"Set_Path", 0.f},
+            {
+                {"Set_Path", 0.f},
+            },
+            {},
+            {
+                0x8C646984,  // Glitch effect
+                0x9144F578,  // Glitch effect
+            },
         },
     },
 };
