@@ -1,5 +1,6 @@
 // Custom Tonemapper
 // We'll create a function so we can just call this in other shaders, instead of having to manage a wall of code in multiple files
+// 
 
 #include "./shared.h"
 
