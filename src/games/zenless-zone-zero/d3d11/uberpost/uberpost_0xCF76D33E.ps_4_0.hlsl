@@ -295,7 +295,8 @@ void main(
   }
 
   if (RENODX_TONE_MAP_TYPE > 0) {
-    r2.zxy = UberpostSrgbLutSample(r6.xyz, cb1[0], t2, s0_s);
+    r2.zxy = UberpostVRLutSample(r6.xyz, cb1[0], t2, s0_s);
+    r2.zxy = ApplyOutputToneMap(r2.zxy, v0.xy);
   } else {
     r6.xyz = saturate(r6.xyz);
     r2.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r6.xyz;

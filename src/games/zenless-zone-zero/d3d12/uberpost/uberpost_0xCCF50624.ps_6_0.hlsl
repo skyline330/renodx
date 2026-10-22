@@ -499,7 +499,8 @@ float4 main(
 
   if (RENODX_TONE_MAP_TYPE > 0) {
     float3 untonemapped = float3(_522, _523, _524);
-    float3 tonemapped = UberpostSrgbLutSample(untonemapped, UberPostBaseCBuffer_000, t2, s0);
+    float3 tonemapped = UberpostVRLutSample(untonemapped, UberPostBaseCBuffer_000, t2, s0);
+    tonemapped = ApplyOutputToneMap(tonemapped, TEXCOORD.xy);
     _612 = tonemapped.x;
     _613 = tonemapped.y;
     _614 = tonemapped.z;
