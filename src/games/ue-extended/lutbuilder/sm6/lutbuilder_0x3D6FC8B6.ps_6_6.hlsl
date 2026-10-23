@@ -1,4 +1,4 @@
-// Stupid Never Dies (UE )
+// Stupid Never Dies (UE 5.?.?.? most likely 5.4)
 
 #include "../lutbuilderoutput.hlsli"
 
